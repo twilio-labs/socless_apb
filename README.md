@@ -1,6 +1,10 @@
-# SLS-APB
+# SOCless apb
 
-Serverless Plugin for SOCless Playbook Builder (apb). Automatically renders State Machines from playbook.json files when a socless-playbooks stack is deployed.
+- Planning on using this with a Serverless deployment? Please use our plugin [SLS-APB](https://github.com/twilio-labs/sls-apb) instead.
+
+**SOCless Automation Playbook Builder**
+
+Translates SOCless Playbook JSON objects into a valid CloudFormation State Machine.
 
 It auto-generates the:
 
@@ -11,13 +15,29 @@ It auto-generates the:
 
 ## Usage
 
-Create your Socless Playbook Definition in a file called playbook.json.
+**Not for use with Serverless Deployments, instead use the SLS-APB plugin https://github.com/twilio-labs/sls-apb.**
+
+Basic Usage
+
+```
+const { apb } = require("apb");
+
+const renderedStateMachine = new apb(playbookJson)
+```
+
+This repository is the parsing, validation, and rendering engine for translating a SOCless json object into a complete StepFunctions State Machine.
+
+### Writing a playbook
 
 The default retry object assigned to each `Task` looks like this:
 
 ```json
 {
-  "ErrorEquals": [ "Lambda.ServiceException", "Lambda.AWSLambdaException", "Lambda.SdkClientException"],
+  "ErrorEquals": [
+    "Lambda.ServiceException",
+    "Lambda.AWSLambdaException",
+    "Lambda.SdkClientException"
+  ],
   "IntervalSeconds": 2,
   "MaxAttempts": 6,
   "BackoffRate": 2
@@ -52,18 +72,10 @@ To automatically add a Task Failure Handler to each `Task` state that will trigg
 }
 ```
 
-To use serverless unpacking for nonstring values (Int, Boolean, etc) that are also valid JSON, use the `apb_render_nonstring_value()` flag in your `playbook.json`. The example below is referencing an Int type in the serverless.yml custom variables definition:
-
-```json
-            "Wait_24_Hour" : {
-                "Type" : "Wait",
-                "Seconds" : "apb_render_nonstring_value(${{self:custom.Wait_24_Hour_Config.${{self:provider.stage}}}})",
-                "Next": "End_Cheer_Up"
-            },
-```
-
 ## Feature Flags
+
 To use cloudwatch logs for SOCless playbooks:
+
 1. Ensure that you are on the most recent version of the Socless core stack which is exporting PlaybooksLogGroup as seen [here]()
 2. Add the following to your playbook repo's `serverless.yml`
 
@@ -72,5 +84,5 @@ To use cloudwatch logs for SOCless playbooks:
 ```yaml
 custom:
   sls_apb:
-      logging: true
+    logging: true
 ```
