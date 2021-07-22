@@ -1,0 +1,38 @@
+{
+    "$id": "http://socless-apb-validator.socless/playbook#",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "properties": {
+        "Playbook": {
+            "description": "Playbook name. Must be alphanumeric",
+            "type": "string",
+            "pattern": "^[A-Za-z0-9]{1,}$"
+        },
+        "Comment": {
+            "type": "string"
+        },
+        "StartAt": {
+            "type": "string"
+        },
+        "States": {
+            "type": "object",
+            "patternProperties": {
+                "^.{1,80}$": {
+                    "$ref": "http://socless-apb-validator.socless/state#"
+                }
+            },
+            "additionalProperties": false
+        },
+        "Version": {
+            "type": "string"
+        },
+        "TimeoutSeconds": {
+            "type": "integer",
+            "minimum": 0
+        },
+        "Decorators": {
+            "$ref": "http://socless-apb-validator.socless/decorators#"
+        }
+    },
+    "required": ["Playbook", "StartAt", "States"],
+    "additionalProperties": false
+}

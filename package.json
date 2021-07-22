@@ -4,8 +4,8 @@
   "description": "SOCless Automation Playbook Builder",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc",
-    "test": "tsc && ./node_modules/.bin/mocha"
+    "build": "rm -rf ./dist && tsc",
+    "test": "rm -rf ./dist && tsc && ./node_modules/.bin/mocha"
   },
   "repository": {
     "type": "git",
@@ -18,7 +18,9 @@
   ],
   "author": "Ubani Balogun",
   "license": "Apache-2.0",
-  "dependencies": {},
+  "dependencies": {
+    "asl-validator": "1.10.0"
+  },
   "devDependencies": {
     "mocha": "^9.0.2",
     "prettier": "^2.3.2",

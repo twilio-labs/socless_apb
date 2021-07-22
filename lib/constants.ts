@@ -25,3 +25,6 @@ export const STATES_EXECUTION_ROLE_ARN =
   "${{cf:socless-${{self:provider.stage}}.StatesExecutionRoleArn}}";
 
 export const AWS_EVENT_RULE_RESOURCE_TYPE = "AWS::Events::Rule";
+
+export const JSON_SCHEMA_ID_BASE_URI = "http://socless-apb-validator.socless";
+export const JSON_SCHEMA_VERSION = "http://json-schema.org/draft-07/schema#";
