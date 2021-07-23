@@ -13,12 +13,12 @@ import waitSchema from "./schemas/wait.json";
 import decoratorSchema from "./schemas/decorators-schema.json";
 import playbookSchema from "./schemas/playbook.json";
 
-interface ValidationErrorObject {
+export interface ValidationErrorObject {
   errorCode: string;
   message: string;
 }
 
-interface ValidationResult {
+export interface ValidationResult {
   isValid: boolean;
   errors: ValidationErrorObject[];
 }

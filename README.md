@@ -17,17 +17,45 @@ It auto-generates the:
 
 **Not for use with Serverless Deployments, instead use the SLS-APB plugin https://github.com/twilio-labs/sls-apb.**
 
-Basic Usage
+#### Validating a Playbook Definition
+
+Use the `validatePlaybook` function as shown below to validate a playbook definition
 
 ```
-const { apb } = require("apb");
+import {validatePlaybook} from "apb/dist/validators"
+// const {validatePlaybook} = require("apb/dist/validators" ) // for non-es6
 
-const renderedStateMachine = new apb(playbookJson)
+const validationResult = validatePlaybook(definition)
+```
+
+validationResult conforms to the ValidationResult interface shown below
+
+```json
+{
+  "isValid": "boolean",
+  "errors": [
+    {
+      "errorCode": "SCHEMA_VALIDATION_ERROR",
+      "message": "string"
+    }
+  ]
+}
+```
+
+### Rendering ASL State machines from playbooks
+
+To render Amazon States Language state machines from playbooks...
+
+```
+import {apb} from "apb";
+// const { apb } = require("apb"); // for non-es6
+
+const {StateMachine} = new apb(playbookJson)
 ```
 
 This repository is the parsing, validation, and rendering engine for translating a SOCless json object into a complete StepFunctions State Machine.
 
-### Writing a playbook
+## Things to note for when Writing a playbook
 
 The default retry object assigned to each `Task` looks like this:
 
@@ -70,19 +98,4 @@ To automatically add a Task Failure Handler to each `Task` state that will trigg
       Task that runs when any step in the playbook fails...
    }
 }
-```
-
-## Feature Flags
-
-To use cloudwatch logs for SOCless playbooks:
-
-1. Ensure that you are on the most recent version of the Socless core stack which is exporting PlaybooksLogGroup as seen [here]()
-2. Add the following to your playbook repo's `serverless.yml`
-
-**serverless.yml:**
-
-```yaml
-custom:
-  sls_apb:
-    logging: true
 ```

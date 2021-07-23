@@ -4,8 +4,8 @@
   "description": "SOCless Automation Playbook Builder",
   "main": "dist/index.js",
   "scripts": {
-    "build": "rm -rf ./dist && tsc",
-    "test": "rm -rf ./dist && tsc && ./node_modules/.bin/mocha"
+    "build": "rm -rf ./dist && tsc --declaration",
+    "test": "rm -rf ./dist && tsc --declaration && ./node_modules/.bin/mocha"
   },
   "repository": {
     "type": "git",
