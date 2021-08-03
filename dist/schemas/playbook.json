@@ -1,6 +1,7 @@
 {
     "$id": "http://socless-apb-validator.socless/playbook#",
     "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
     "properties": {
         "Playbook": {
             "description": "Playbook name. Must be alphanumeric",
@@ -15,8 +16,12 @@
         },
         "States": {
             "type": "object",
+            "propertyNames": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9_]{1,80}$"
+            },
             "patternProperties": {
-                "^.{1,80}$": {
+                "^[a-zA-Z0-9_]{1,80}$": {
                     "$ref": "http://socless-apb-validator.socless/state#"
                 }
             },

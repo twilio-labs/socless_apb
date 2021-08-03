@@ -7,12 +7,6 @@
       "type": "string",
       "pattern": "^Parallel$"
     },
-    "Parameters": {
-      "type": ["object", "array"],
-      "items": {
-        "type": "object"
-      }
-    },
     "ResultSelector": {
       "type": "object"
     },
@@ -89,11 +83,14 @@
       }
     }
   },
-  "oneOf": [{
-    "required": ["Next"]
-  }, {
-    "required": ["End"]
-  }],
+  "oneOf": [
+    {
+      "required": ["Next"]
+    },
+    {
+      "required": ["End"]
+    }
+  ],
   "required": ["Type", "Branches"],
   "additionalProperties": false
 }

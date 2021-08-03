@@ -1,5 +1,4 @@
 import Ajv, { ErrorObject } from "ajv";
-import aslValidator from "asl-validator";
 import choiceSchema from "./schemas/choice.json";
 import failSchema from "./schemas/fail.json";
 import mapSchema from "./schemas/map.json";
@@ -12,6 +11,27 @@ import taskSchema from "./schemas/task.json";
 import waitSchema from "./schemas/wait.json";
 import decoratorSchema from "./schemas/decorators-schema.json";
 import playbookSchema from "./schemas/playbook.json";
+import decoratorTaskSchema from "./schemas/decorator-task.json";
+
+// build an instance of ajv using schemas that for a valid  playbook.json
+const ajv = new Ajv({
+  schemas: [
+    playbookSchema,
+    decoratorTaskSchema,
+    stateMachineSchema,
+    decoratorSchema,
+    choiceSchema,
+    failSchema,
+    mapSchema,
+    parallelSchema,
+    passSchema,
+    stateSchema,
+    succeedSchema,
+    taskSchema,
+    waitSchema,
+  ],
+  allErrors: true,
+});
 
 export interface ValidationErrorObject {
   errorCode: string;
@@ -30,12 +50,40 @@ export interface ValidationResult {
 function restructureAjvErrors(errors: ErrorObject[]): ValidationErrorObject[] {
   return errors.map((errObj: ErrorObject) => ({
     errorCode: "SCHEMA_VALIDATION_ERROR",
-    message: `${errObj.dataPath} ${errObj.message}. ${Object.entries(
-      errObj.params
-    )
+    message: `${errObj.keyword} ${errObj.instancePath} ${
+      errObj.message
+    }. ${Object.entries(errObj.params)
       .map((each) => each.join(":"))
       .join(", ")}`,
   }));
+}
+
+function createSchemaValidator(schema: object) {
+  const ajvValidator = ajv.compile(schema);
+
+  if (typeof ajvValidator === "undefined") {
+    throw new Error(
+      `Unable to retrieve a validator from AJV for the provided schema ${schema}`
+    );
+  }
+
+  const validator = (data): ValidationResult => {
+    const isValid = ajvValidator(data);
+
+    if (typeof isValid !== "boolean") {
+      throw new Error(
+        "Ajv validator returned non-boolean response. This is an unexpected internal error that needs debugging"
+      );
+    }
+    const errors = ajvValidator.errors
+      ? restructureAjvErrors(ajvValidator.errors)
+      : [];
+    return {
+      isValid,
+      errors,
+    };
+  };
+  return validator;
 }
 
 /**
@@ -50,24 +98,6 @@ function validatePlaybookJsonSchema(definition): ValidationResult {
   if (definition === undefined) {
     throw new Error("Playbook definition is undefined");
   }
-  // build an instance of ajv using schemas that for a valid  playbook.json
-  const ajv = new Ajv({
-    schemas: [
-      playbookSchema,
-      stateMachineSchema,
-      decoratorSchema,
-      choiceSchema,
-      failSchema,
-      mapSchema,
-      parallelSchema,
-      passSchema,
-      stateSchema,
-      succeedSchema,
-      taskSchema,
-      waitSchema,
-    ],
-    allErrors: true,
-  });
 
   const validate = ajv.getSchema(playbookSchema.$id);
   if (typeof validate === "undefined") {
@@ -101,3 +131,18 @@ export function validatePlaybook(definition): ValidationResult {
   //TODO: Extend this to return the results from validateASLRules as well
   return validatePlaybookJsonSchema(definition);
 }
+
+/**
+ * Validate that a Playbook's name abides by the expected schema in
+ * schemas/playbook.json:$.properties.Playbook
+ */
+export const validatePlaybookName = createSchemaValidator(
+  playbookSchema.properties.Playbook
+);
+
+/**
+ * Validates that a State name abides by the schema
+ */
+export const validateStateName = createSchemaValidator(
+  playbookSchema.properties.States.propertyNames
+);

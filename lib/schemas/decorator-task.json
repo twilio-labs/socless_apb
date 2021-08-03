@@ -1,11 +1,11 @@
 {
-  "$id": "http://socless-apb-validator.socless/map#",
+  "$id": "http://socless-apb-validator.socless/decorator-task#",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "Type": {
       "type": "string",
-      "pattern": "^Map$"
+      "pattern": "^(Task|Interaction)$"
     },
     "Next": {
       "type": "string"
@@ -22,27 +22,18 @@
     "InputPath": {
       "type": ["string", "null"]
     },
-    "ResultPath": {
-      "type": ["string", "null"]
-    },
-    "ItemsPath": {
-      "type": ["string", "null"]
-    },
-    "MaxConcurrency": {
-      "type": "number",
-      "minimum": 0
-    },
-    "Iterator": {
-      "$ref": "http://socless-apb-validator.socless/state-machine#"
-    },
-    "Parameters": {
-      "anyOf": [
-        { "type": "object" },
-        { "type": "array", "items": { "type": "object" } }
+    "Resource": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object"
+        }
       ]
     },
-    "ResultSelector": {
-      "type": "object"
+    "ResultPath": {
+      "type": ["string", "null"]
     },
     "Retry": {
       "type": "array",
@@ -84,20 +75,43 @@
           },
           "Next": {
             "type": "string"
+          },
+          "ResultPath": {
+            "type": ["string", "null"]
           }
         },
         "required": ["ErrorEquals", "Next"]
       }
+    },
+    "TimeoutSeconds": {
+      "type": "number",
+      "minimum": 1
+    },
+    "TimeoutSecondsPath": {
+      "type": "string"
+    },
+    "HeartbeatSeconds": {
+      "type": "number",
+      "minimum": 1
+    },
+    "HeartbeatSecondsPath": {
+      "type": "string"
+    },
+    "ResultSelector": {
+      "type": "object"
+    },
+    "Parameters": {
+      "anyOf": [
+        { "type": "object" },
+        {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      ]
     }
   },
-  "oneOf": [
-    {
-      "required": ["Next"]
-    },
-    {
-      "required": ["End"]
-    }
-  ],
-  "required": ["Type", "Iterator"],
+  "required": ["Type", "Resource"],
   "additionalProperties": false
 }

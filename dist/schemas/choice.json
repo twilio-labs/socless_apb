@@ -144,7 +144,8 @@
                     "type": "boolean"
                 }
             },
-            "oneOf": [{
+            "oneOf": [
+                {
                     "required": ["And"]
                 },
                 {

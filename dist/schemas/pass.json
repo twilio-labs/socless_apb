@@ -26,18 +26,24 @@
             "type": "string"
         },
         "Parameters": {
-            "type": ["object", "array"],
-            "items": {
-                "type": "object"
-            }
+            "anyOf": [
+                { "type": "object" },
+                {
+                    "type": "array",
+                    "items": { "type": "object" }
+                }
+            ]
         },
         "Result": {}
     },
-    "oneOf": [{
+    "oneOf": [
+        {
             "required": ["Next"]
-        }, {
+        },
+        {
             "required": ["End"]
-        }],
+        }
+    ],
     "required": ["Type"],
     "additionalProperties": false
 }

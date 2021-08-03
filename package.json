@@ -19,7 +19,8 @@
   "author": "Ubani Balogun",
   "license": "Apache-2.0",
   "dependencies": {
-    "asl-validator": "1.10.0"
+    "ajv": "^8.6.2",
+    "ajv-cli": "^5.0.0"
   },
   "devDependencies": {
     "mocha": "^9.0.2",

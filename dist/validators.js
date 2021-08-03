@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.validatePlaybook = void 0;
+exports.validateStateName = exports.validatePlaybookName = exports.validatePlaybook = void 0;
 var ajv_1 = __importDefault(require("ajv"));
 var choice_json_1 = __importDefault(require("./schemas/choice.json"));
 var fail_json_1 = __importDefault(require("./schemas/fail.json"));
@@ -17,6 +17,26 @@ var task_json_1 = __importDefault(require("./schemas/task.json"));
 var wait_json_1 = __importDefault(require("./schemas/wait.json"));
 var decorators_schema_json_1 = __importDefault(require("./schemas/decorators-schema.json"));
 var playbook_json_1 = __importDefault(require("./schemas/playbook.json"));
+var decorator_task_json_1 = __importDefault(require("./schemas/decorator-task.json"));
+// build an instance of ajv using schemas that for a valid  playbook.json
+var ajv = new ajv_1.default({
+    schemas: [
+        playbook_json_1.default,
+        decorator_task_json_1.default,
+        state_machine_json_1.default,
+        decorators_schema_json_1.default,
+        choice_json_1.default,
+        fail_json_1.default,
+        map_json_1.default,
+        parallel_json_1.default,
+        pass_json_1.default,
+        state_json_1.default,
+        succeed_json_1.default,
+        task_json_1.default,
+        wait_json_1.default,
+    ],
+    allErrors: true,
+});
 /**
  * Transforms ajv error objects into our ValidationErrorObject
  * @param errors list of ajv ErrorObjects
@@ -24,10 +44,30 @@ var playbook_json_1 = __importDefault(require("./schemas/playbook.json"));
 function restructureAjvErrors(errors) {
     return errors.map(function (errObj) { return ({
         errorCode: "SCHEMA_VALIDATION_ERROR",
-        message: errObj.dataPath + " " + errObj.message + ". " + Object.entries(errObj.params)
+        message: errObj.keyword + " " + errObj.instancePath + " " + errObj.message + ". " + Object.entries(errObj.params)
             .map(function (each) { return each.join(":"); })
             .join(", "),
     }); });
+}
+function createSchemaValidator(schema) {
+    var ajvValidator = ajv.compile(schema);
+    if (typeof ajvValidator === "undefined") {
+        throw new Error("Unable to retrieve a validator from AJV for the provided schema " + schema);
+    }
+    var validator = function (data) {
+        var isValid = ajvValidator(data);
+        if (typeof isValid !== "boolean") {
+            throw new Error("Ajv validator returned non-boolean response. This is an unexpected internal error that needs debugging");
+        }
+        var errors = ajvValidator.errors
+            ? restructureAjvErrors(ajvValidator.errors)
+            : [];
+        return {
+            isValid: isValid,
+            errors: errors,
+        };
+    };
+    return validator;
 }
 /**
  * Validates that the JSON structures within a playbook JSON obey the appropriate schema
@@ -41,24 +81,6 @@ function validatePlaybookJsonSchema(definition) {
     if (definition === undefined) {
         throw new Error("Playbook definition is undefined");
     }
-    // build an instance of ajv using schemas that for a valid  playbook.json
-    var ajv = new ajv_1.default({
-        schemas: [
-            playbook_json_1.default,
-            state_machine_json_1.default,
-            decorators_schema_json_1.default,
-            choice_json_1.default,
-            fail_json_1.default,
-            map_json_1.default,
-            parallel_json_1.default,
-            pass_json_1.default,
-            state_json_1.default,
-            succeed_json_1.default,
-            task_json_1.default,
-            wait_json_1.default,
-        ],
-        allErrors: true,
-    });
     var validate = ajv.getSchema(playbook_json_1.default.$id);
     if (typeof validate === "undefined") {
         throw new Error("Failed to create validator for playbookJsonSchema.");
@@ -88,3 +110,12 @@ function validatePlaybook(definition) {
     return validatePlaybookJsonSchema(definition);
 }
 exports.validatePlaybook = validatePlaybook;
+/**
+ * Validate that a Playbook's name abides by the expected schema in
+ * schemas/playbook.json:$.properties.Playbook
+ */
+exports.validatePlaybookName = createSchemaValidator(playbook_json_1.default.properties.Playbook);
+/**
+ * Validates that a State name abides by the schema
+ */
+exports.validateStateName = createSchemaValidator(playbook_json_1.default.properties.States.propertyNames);

@@ -30,12 +30,16 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.apb = void 0;
 var constants_1 = require("./constants");
 var errors_1 = require("./errors");
+var validators_1 = require("./validators");
 var parse_self_pattern = new RegExp("(\\\"" + constants_1.PARSE_SELF_NAME + "\\()(.*)(\\)\\\")", "g");
 var apb = /** @class */ (function () {
     function apb(definition, apb_config) {
         var _a, _b;
         if (apb_config === void 0) { apb_config = {}; }
-        this.validateTopLevelKeys(definition);
+        var _c = validators_1.validatePlaybook(definition), isValid = _c.isValid, errors = _c.errors;
+        if (!isValid) {
+            throw new errors_1.PlaybookValidationError("Playbook Definition is invalid " + JSON.stringify(errors, null, 2));
+        }
         this.apb_config = apb_config;
         this.DecoratorFlags = __assign({ hasTaskFailureHandler: false }, constants_1.DECORATOR_FLAGS);
         var Playbook = definition.Playbook, States = definition.States, Decorators = definition.Decorators, StartAt = definition.StartAt, Comment = definition.Comment, topLevel = __rest(definition, ["Playbook", "States", "Decorators", "StartAt", "Comment"]);
@@ -52,9 +56,9 @@ var apb = /** @class */ (function () {
                 this.DecoratorFlags.hasTaskFailureHandler = false;
             }
         }
-        var starting_step = this.generate_playbook_setup_steps(StartAt);
+        var startingStep = this.generate_playbook_setup_steps(StartAt);
         // build resolved state machine from socless states
-        this.StateMachine = __assign(__assign({}, topLevel), { Comment: Comment, StartAt: constants_1.PLAYBOOK_DIRECT_INVOCATION_CHECK_STEP_NAME, States: __assign(__assign({}, starting_step), this.transformStates()) });
+        this.StateMachine = __assign(__assign({}, topLevel), { Comment: Comment, StartAt: constants_1.PLAYBOOK_DIRECT_INVOCATION_CHECK_STEP_NAME, States: __assign(__assign({}, startingStep), this.transformStates()) });
         // build finalized yaml output
         this.StateMachineYaml = {
             Resources: (_a = {},
@@ -75,13 +79,6 @@ var apb = /** @class */ (function () {
                 _b),
         };
     }
-    apb.prototype.validateTopLevelKeys = function (definition) {
-        var REQUIRED_FIELDS = ["Playbook", "Comment", "StartAt", "States"];
-        REQUIRED_FIELDS.forEach(function (key) {
-            if (!definition[key])
-                throw new errors_1.PlaybookValidationError("Playbook definition does not have the required top-level key, '" + key + "'");
-        });
-    };
     //* BOOLEAN CHECKS & Validators /////////////////////////////////////////////////////
     apb.prototype.isDefaultRetryDisabled = function (stateName) {
         if (this.Decorators.DisableDefaultRetry) {
@@ -92,38 +89,15 @@ var apb = /** @class */ (function () {
             return false;
         }
     };
-    apb.prototype.validateTaskFailureHandlerDecorator = function (config) {
-        if (config.Type === "Task" || config.Type === "Parallel") {
-            return true;
-        }
-        else {
-            throw new Error("Decorator.TaskFailureHandler configured incorrectly. Must be a Task or Parallel state");
-        }
-    };
     apb.prototype.taskErrorHandlerExists = function () {
-        return (this.Decorators.TaskFailureHandler &&
-            this.validateTaskFailureHandlerDecorator(this.Decorators.TaskFailureHandler));
+        return this.Decorators.TaskFailureHandler;
     };
     //* STATE GENERATIONS /////////////////////////////////////////////////////
-    apb.prototype.genIntegrationHelperStateName = function (originalName) {
-        return ("helper_" + originalName.toLowerCase()).slice(0, 128);
-    };
     apb.prototype.genTaskFailureHandlerCatchConfig = function (stateName) {
         return {
             ErrorEquals: ["States.TaskFailed"],
             ResultPath: "$.errors." + stateName,
             Next: this.DecoratorFlags.TaskFailureHandlerStartLabel,
-        };
-    };
-    apb.prototype.genHelperState = function (stateConfig, stateName) {
-        return {
-            Type: "Pass",
-            Result: {
-                Name: stateName,
-                Parameters: stateConfig.Parameters,
-            },
-            ResultPath: "$.State_Config",
-            Next: stateName,
         };
     };
     apb.prototype.genTaskFailureHandlerStates = function (TaskFailureHandler) {
@@ -141,16 +115,11 @@ var apb = /** @class */ (function () {
             },
             _a;
     };
-    apb.prototype.resolveStateName = function (stateName, States) {
-        if (States === void 0) { States = this.States; }
-        return stateName;
-    };
     //* ATTRIBUTE TRANSFORMS /////////////////////////////////////////////////////
     apb.prototype.transformCatchConfig = function (catchConfig, States) {
-        var _this = this;
         var catches = catchConfig.map(function (catchState) {
             return Object.assign({}, catchState, {
-                Next: _this.resolveStateName(catchState.Next, States),
+                Next: catchState.Next,
             });
         });
         return catches;
@@ -178,18 +147,17 @@ var apb = /** @class */ (function () {
         var _a;
         var transformedConfig = Object.assign({}, stateConfig);
         if (!!stateConfig["Next"]) {
-            transformedConfig = __assign(__assign({}, transformedConfig), { Next: this.resolveStateName(stateConfig.Next, States) });
+            transformedConfig = __assign(__assign({}, transformedConfig), { Next: stateConfig.Next });
         }
         return _a = {}, _a[stateName] = transformedConfig, _a;
     };
     apb.prototype.transformChoiceState = function (stateName, stateConfig, States) {
         var _a;
-        var _this = this;
         if (States === void 0) { States = this.States; }
         var choices = [];
         stateConfig.Choices.forEach(function (choice) {
             choices.push(Object.assign({}, choice, {
-                Next: _this.resolveStateName(choice.Next, States),
+                Next: choice.Next,
             }));
         });
         return _a = {},
@@ -225,7 +193,7 @@ var apb = /** @class */ (function () {
         var newConfig = Object.assign({}, stateConfig);
         if (!!newConfig["Next"]) {
             Object.assign(newConfig, {
-                Next: this.resolveStateName(newConfig.Next, States),
+                Next: newConfig.Next,
             });
         }
         if (!!newConfig["Catch"]) {
@@ -262,7 +230,7 @@ var apb = /** @class */ (function () {
         var newConfig = Object.assign({}, stateConfig);
         if (!!stateConfig["Next"]) {
             Object.assign(newConfig, {
-                Next: this.resolveStateName(stateConfig.Next, States),
+                Next: stateConfig.Next,
             });
         }
         if (!!stateConfig["Catch"]) {
@@ -321,7 +289,7 @@ var apb = /** @class */ (function () {
         }
         if (End === undefined) {
             Object.assign(helperState, {
-                Next: this.resolveStateName(stateConfig.Next, States),
+                Next: stateConfig.Next,
             });
         }
         else {
@@ -330,7 +298,7 @@ var apb = /** @class */ (function () {
         Object.assign(Output, topLevel, { Next: helperStateName });
         var newBranches = Branches.map(function (branch) {
             return {
-                StartAt: _this.resolveStateName(branch.StartAt, branch.States),
+                StartAt: branch.StartAt,
                 States: _this.transformStates((States = branch.States), (DecoratorFlags = {})),
             };
         });
@@ -390,7 +358,7 @@ var apb = /** @class */ (function () {
         var logs_disabled = {};
         return this.apb_config.logging ? logs_enabled : logs_disabled;
     };
-    apb.prototype.generate_playbook_formatter_step = function (start_at_step_name) {
+    apb.prototype.generatePlaybookFormatterStep = function (startAtStepName) {
         var _a;
         var initial_step = (_a = {},
             _a[constants_1.PLAYBOOK_FORMATTER_STEP_NAME] = {
@@ -401,12 +369,12 @@ var apb = /** @class */ (function () {
                     results: {},
                     errors: {},
                 },
-                Next: this.resolveStateName(start_at_step_name),
+                Next: startAtStepName,
             },
             _a);
         return initial_step;
     };
-    apb.prototype.generate_playbook_setup_steps = function (start_at_step_name) {
+    apb.prototype.generate_playbook_setup_steps = function (startAtStepName) {
         var _a, _b;
         // Choice state checks if `artifacts` and `execution_id` exist in playbook input.
         // if yes, continue to regular playbook steps
@@ -455,7 +423,7 @@ var apb = /** @class */ (function () {
                                 IsPresent: true,
                             },
                         ],
-                        Next: start_at_step_name,
+                        Next: startAtStepName,
                     },
                 ],
                 Default: constants_1.PLAYBOOK_SETUP_STEP_NAME,
@@ -471,10 +439,10 @@ var apb = /** @class */ (function () {
                     "playbook_name.$": "$$.StateMachine.Name",
                     "playbook_event_details.$": "$$.Execution.Input",
                 },
-                Next: start_at_step_name,
+                Next: startAtStepName,
             },
             _b);
-        var setup_steps = __assign(__assign(__assign({}, check_if_playbook_was_direct_executed), PLAYBOOK_SETUP_STEP), this.generate_playbook_formatter_step(start_at_step_name));
+        var setup_steps = __assign(__assign(__assign({}, check_if_playbook_was_direct_executed), PLAYBOOK_SETUP_STEP), this.generatePlaybookFormatterStep(startAtStepName));
         return setup_steps;
     };
     return apb;

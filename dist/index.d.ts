@@ -10,29 +10,16 @@ export declare class apb {
     PlaybookName: string;
     StateMachineYaml: StateMachineYaml;
     constructor(definition: PlaybookDefinition, apb_config?: {});
-    validateTopLevelKeys(definition: PlaybookDefinition): void;
     isDefaultRetryDisabled(stateName: string): any;
-    validateTaskFailureHandlerDecorator(config: any): boolean;
     taskErrorHandlerExists(): any;
-    genIntegrationHelperStateName(originalName: string): string;
     genTaskFailureHandlerCatchConfig(stateName: string): {
         ErrorEquals: string[];
         ResultPath: string;
         Next: any;
     };
-    genHelperState(stateConfig: any, stateName: string): {
-        Type: string;
-        Result: {
-            Name: string;
-            Parameters: any;
-        };
-        ResultPath: string;
-        Next: string;
-    };
     genTaskFailureHandlerStates(TaskFailureHandler: any): {
         [x: number]: any;
     };
-    resolveStateName(stateName: string, States?: Record<string, State>): string;
     transformCatchConfig(catchConfig: any, States: Record<string, State>): any;
     transformRetryConfig(retryConfig: any, stateName: string): any;
     defaultTransformState(stateName: any, stateConfig: any, States: any): {
@@ -57,7 +44,7 @@ export declare class apb {
     };
     transformStates(States?: Record<string, State>, DecoratorFlags?: any): {};
     buildLoggingConfiguration(): {};
-    generate_playbook_formatter_step(start_at_step_name: string): {
+    generatePlaybookFormatterStep(startAtStepName: string): {
         PLAYBOOK_FORMATTER: {
             Type: string;
             Parameters: {
@@ -69,7 +56,7 @@ export declare class apb {
             Next: string;
         };
     };
-    generate_playbook_setup_steps(start_at_step_name: string): {
+    generate_playbook_setup_steps(startAtStepName: string): {
         PLAYBOOK_FORMATTER: {
             Type: string;
             Parameters: {

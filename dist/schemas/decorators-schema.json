@@ -1,5 +1,6 @@
 {
     "$id": "http://socless-apb-validator.socless/decorators#",
+    "type": "object",
     "$schema": "http://json-schema.org/draft-07/schema",
     "properties": {
         "DisableDefaultRetry": {
@@ -14,14 +15,10 @@
             },
             "oneOf": [
                 {
-                    "required": [
-                        "all"
-                    ]
+                    "required": ["all"]
                 },
                 {
-                    "required": [
-                        "tasks"
-                    ]
+                    "required": ["tasks"]
                 }
             ],
             "additionalProperties": false
@@ -29,7 +26,7 @@
         "TaskFailureHandler": {
             "oneOf": [
                 {
-                    "$ref": "http://socless-apb-validator.socless/task#"
+                    "$ref": "http://socless-apb-validator.socless/decorator-task#"
                 },
                 {
                     "$ref": "http://socless-apb-validator.socless/parallel#"
