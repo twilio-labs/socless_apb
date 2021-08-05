@@ -240,7 +240,7 @@ describe("apb", () => {
         logging: true,
       }).StateMachineYaml;
       assert(
-        with_logging.Resources.Check_User_Happiness.Properties
+        with_logging.Resources.CheckUserHappiness.Properties
           .LoggingConfiguration
       );
     });
@@ -248,8 +248,7 @@ describe("apb", () => {
     it("should exclude logging based on config object {logging: false}", () => {
       const no_logging = apb_with_parallel_and_interactions.StateMachineYaml;
       assert(
-        !no_logging.Resources.Check_User_Happiness.Properties
-          .LoggingConfiguration
+        !no_logging.Resources.CheckUserHappiness.Properties.LoggingConfiguration
       );
     });
   });

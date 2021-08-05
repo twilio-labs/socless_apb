@@ -3,6 +3,7 @@ const general_playbooks = require("./playbooks/general");
 const task_failure_handlers = require("./playbooks/task_failure_handlers");
 const full_playbooks = require("./playbooks/full_playbooks");
 const error_playbooks = require("./playbooks/error_playbooks");
+const hello_world = require("./playbooks/hello_world/playbook.json");
 
 // re-export for easy usage in tests
 module.exports = {
@@ -10,4 +11,5 @@ module.exports = {
   ...task_failure_handlers,
   ...full_playbooks,
   ...error_playbooks,
+  ...{ hello_world },
 };

@@ -16,6 +16,7 @@ import {
 } from "./constants";
 import { PlaybookValidationError } from "./errors";
 import { StateMachineYaml } from "./sls_apb";
+import { validatePlaybook } from "./validators";
 
 const parse_self_pattern = new RegExp(
   `(\\"${PARSE_SELF_NAME}\\()(.*)(\\)\\")`,
@@ -32,7 +33,13 @@ export class apb {
   StateMachineYaml: StateMachineYaml;
 
   constructor(definition: PlaybookDefinition, apb_config = {}) {
-    this.validateTopLevelKeys(definition);
+    const { isValid, errors } = validatePlaybook(definition);
+    if (!isValid) {
+      throw new PlaybookValidationError(
+        `Playbook Definition is invalid ${JSON.stringify(errors, null, 2)}`
+      );
+    }
+
     this.apb_config = apb_config;
     this.DecoratorFlags = {
       hasTaskFailureHandler: false,
@@ -58,7 +65,7 @@ export class apb {
       }
     }
 
-    const starting_step = this.generate_playbook_setup_steps(StartAt);
+    const startingStep = this.generate_playbook_setup_steps(StartAt);
 
     // build resolved state machine from socless states
     this.StateMachine = {
@@ -66,7 +73,7 @@ export class apb {
       Comment,
       StartAt: PLAYBOOK_DIRECT_INVOCATION_CHECK_STEP_NAME,
       States: {
-        ...starting_step,
+        ...startingStep,
         ...this.transformStates(),
       },
     };
@@ -100,16 +107,6 @@ export class apb {
     };
   }
 
-  validateTopLevelKeys(definition: PlaybookDefinition) {
-    const REQUIRED_FIELDS = ["Playbook", "Comment", "StartAt", "States"];
-    REQUIRED_FIELDS.forEach((key) => {
-      if (!definition[key])
-        throw new PlaybookValidationError(
-          `Playbook definition does not have the required top-level key, '${key}'`
-        );
-    });
-  }
-
   //* BOOLEAN CHECKS & Validators /////////////////////////////////////////////////////
 
   isDefaultRetryDisabled(stateName: string) {
@@ -123,48 +120,17 @@ export class apb {
     }
   }
 
-  validateTaskFailureHandlerDecorator(config: any) {
-    if (config.Type === "Task" || config.Type === "Parallel") {
-      return true;
-    } else {
-      throw new Error(
-        "Decorator.TaskFailureHandler configured incorrectly. Must be a Task or Parallel state"
-      );
-    }
-  }
-
   taskErrorHandlerExists() {
-    return (
-      this.Decorators.TaskFailureHandler &&
-      this.validateTaskFailureHandlerDecorator(
-        this.Decorators.TaskFailureHandler
-      )
-    );
+    return this.Decorators.TaskFailureHandler;
   }
 
   //* STATE GENERATIONS /////////////////////////////////////////////////////
-
-  genIntegrationHelperStateName(originalName: string) {
-    return `helper_${originalName.toLowerCase()}`.slice(0, 128);
-  }
 
   genTaskFailureHandlerCatchConfig(stateName: string) {
     return {
       ErrorEquals: ["States.TaskFailed"],
       ResultPath: `$.errors.${stateName}`,
       Next: this.DecoratorFlags.TaskFailureHandlerStartLabel,
-    };
-  }
-
-  genHelperState(stateConfig: any, stateName: string) {
-    return {
-      Type: "Pass",
-      Result: {
-        Name: stateName,
-        Parameters: stateConfig.Parameters,
-      },
-      ResultPath: "$.State_Config",
-      Next: stateName,
     };
   }
 
@@ -184,16 +150,12 @@ export class apb {
     };
   }
 
-  resolveStateName(stateName: string, States = this.States) {
-    return stateName;
-  }
-
   //* ATTRIBUTE TRANSFORMS /////////////////////////////////////////////////////
 
   transformCatchConfig(catchConfig: any, States: Record<string, State>) {
     const catches = catchConfig.map((catchState) =>
       Object.assign({}, catchState, {
-        Next: this.resolveStateName(catchState.Next, States),
+        Next: catchState.Next,
       })
     );
     return catches;
@@ -230,7 +192,7 @@ export class apb {
     if (!!stateConfig["Next"]) {
       transformedConfig = {
         ...transformedConfig,
-        Next: this.resolveStateName(stateConfig.Next, States),
+        Next: stateConfig.Next,
       };
     }
     return { [stateName]: transformedConfig };
@@ -241,7 +203,7 @@ export class apb {
     stateConfig.Choices.forEach((choice) => {
       choices.push(
         Object.assign({}, choice, {
-          Next: this.resolveStateName(choice.Next, States),
+          Next: choice.Next,
         })
       );
     });
@@ -290,7 +252,7 @@ export class apb {
     let newConfig = Object.assign({}, stateConfig);
     if (!!newConfig["Next"]) {
       Object.assign(newConfig, {
-        Next: this.resolveStateName(newConfig.Next, States),
+        Next: newConfig.Next,
       });
     }
 
@@ -337,7 +299,7 @@ export class apb {
 
     if (!!stateConfig["Next"]) {
       Object.assign(newConfig, {
-        Next: this.resolveStateName(stateConfig.Next, States),
+        Next: stateConfig.Next,
       });
     }
 
@@ -411,7 +373,7 @@ export class apb {
 
     if (End === undefined) {
       Object.assign(helperState, {
-        Next: this.resolveStateName(stateConfig.Next, States),
+        Next: stateConfig.Next,
       });
     } else {
       Object.assign(helperState, { End: true });
@@ -421,7 +383,7 @@ export class apb {
 
     const newBranches = Branches.map((branch) => {
       return {
-        StartAt: this.resolveStateName(branch.StartAt, branch.States),
+        StartAt: branch.StartAt,
         States: this.transformStates(
           (States = branch.States),
           (DecoratorFlags = {})
@@ -517,7 +479,7 @@ export class apb {
     return this.apb_config.logging ? logs_enabled : logs_disabled;
   }
 
-  generate_playbook_formatter_step(start_at_step_name: string) {
+  generatePlaybookFormatterStep(startAtStepName: string) {
     const initial_step = {
       [PLAYBOOK_FORMATTER_STEP_NAME]: {
         Type: "Pass",
@@ -527,14 +489,14 @@ export class apb {
           results: {},
           errors: {},
         },
-        Next: this.resolveStateName(start_at_step_name),
+        Next: startAtStepName,
       },
     };
 
     return initial_step;
   }
 
-  generate_playbook_setup_steps(start_at_step_name: string) {
+  generate_playbook_setup_steps(startAtStepName: string) {
     // Choice state checks if `artifacts` and `execution_id` exist in playbook input.
     // if yes, continue to regular playbook steps
     // if no, run lambda that sets up SOCless global state for this playbook, then continue to regular playbook
@@ -582,7 +544,7 @@ export class apb {
                 IsPresent: true,
               },
             ],
-            Next: start_at_step_name,
+            Next: startAtStepName,
           },
         ],
         Default: PLAYBOOK_SETUP_STEP_NAME,
@@ -600,14 +562,14 @@ export class apb {
           "playbook_name.$": "$$.StateMachine.Name",
           "playbook_event_details.$": "$$.Execution.Input",
         },
-        Next: start_at_step_name,
+        Next: startAtStepName,
       },
     };
 
     const setup_steps = {
       ...check_if_playbook_was_direct_executed,
       ...PLAYBOOK_SETUP_STEP,
-      ...this.generate_playbook_formatter_step(start_at_step_name),
+      ...this.generatePlaybookFormatterStep(startAtStepName),
     };
 
     return setup_steps;
