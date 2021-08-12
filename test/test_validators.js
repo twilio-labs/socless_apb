@@ -1,5 +1,9 @@
 const assert = require("assert");
-const { validatePlaybook } = require("../dist/validators");
+const {
+  validatePlaybook,
+  validateHasUniqueStateNames,
+  ValidationErrorTypes,
+} = require("../dist/validators");
 const {
   pb_parallel_and_interaction,
   pb_task_failure_handler,
@@ -40,5 +44,63 @@ describe("validatePlaybook", () => {
     );
     assert(!isValid);
     assert(errors.length > 0);
+  });
+});
+
+describe("validatePlaybookHasUniqueNames", () => {
+  it("Returns valid for a playbook with only unique state names", () => {
+    const validPlaybooks = [hello_world, pb_parallel_and_interaction];
+
+    validPlaybooks
+      .map((playbook) => validateHasUniqueStateNames(playbook))
+      .map(({ isValid, errors }, index) => {
+        assert(
+          isValid,
+          `Playbook with index ${index} in list of tested playbooks has the following errors ${JSON.stringify(
+            errors,
+            null,
+            2
+          )}`
+        );
+        assert(errors.length === 0);
+      });
+  });
+
+  it("Returns invalid for a playbook with duplicate state names", () => {
+    // Use prettier ignore here to keep the object as raw json so that
+    // we can duplicate the StateA key without typescript yelling
+    // prettier-ignore
+    const playbookWithDuplicateStates = {
+      "Playbook": "Duplicate States",
+      "StartAt": "StateA",
+      "States": {
+        "StateA": {
+          "Type": "Pass",
+          "Next": "StateB",
+        },
+        "StateB": {
+          "Type": "Parallel",
+          "End": true,
+          "Branches": [
+            {
+              "StartAt": "StateA",
+              "States": {
+                "StateA": {
+                  "Type": "Pass",
+                  "End": true,
+                },
+              },
+            },
+          ],
+        },
+      },
+    };
+
+    const result = validateHasUniqueStateNames(playbookWithDuplicateStates);
+    assert(!result.isValid);
+    assert(
+      result.errors[0].errorCode == ValidationErrorTypes.RULE_VALIDATION_ERROR
+    );
+    console.log(result);
   });
 });

@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.validateStateName = exports.validatePlaybookName = exports.validatePlaybook = void 0;
+exports.validateHasUniqueStateNames = exports.validateStateName = exports.validatePlaybookName = exports.validatePlaybook = exports.ValidationErrorTypes = void 0;
 var ajv_1 = __importDefault(require("ajv"));
 var choice_json_1 = __importDefault(require("./schemas/choice.json"));
 var fail_json_1 = __importDefault(require("./schemas/fail.json"));
@@ -37,13 +37,18 @@ var ajv = new ajv_1.default({
     ],
     allErrors: true,
 });
+var ValidationErrorTypes;
+(function (ValidationErrorTypes) {
+    ValidationErrorTypes["SCHEMA_VALIDATION_ERROR"] = "SCHEMA_VALIDATION_ERROR";
+    ValidationErrorTypes["RULE_VALIDATION_ERROR"] = "RULE_VALIDATION_ERROR";
+})(ValidationErrorTypes = exports.ValidationErrorTypes || (exports.ValidationErrorTypes = {}));
 /**
  * Transforms ajv error objects into our ValidationErrorObject
  * @param errors list of ajv ErrorObjects
  */
 function restructureAjvErrors(errors) {
     return errors.map(function (errObj) { return ({
-        errorCode: "SCHEMA_VALIDATION_ERROR",
+        errorCode: ValidationErrorTypes.SCHEMA_VALIDATION_ERROR,
         message: errObj.keyword + " " + errObj.instancePath + " " + errObj.message + ". " + Object.entries(errObj.params)
             .map(function (each) { return each.join(":"); })
             .join(", "),
@@ -119,3 +124,44 @@ exports.validatePlaybookName = createSchemaValidator(playbook_json_1.default.pro
  * Validates that a State name abides by the schema
  */
 exports.validateStateName = createSchemaValidator(playbook_json_1.default.properties.States.propertyNames);
+function getStateNames(StatesObj) {
+    function stateNameReducer(nameAccumulator, _a) {
+        var stateName = _a[0], stateConfig = _a[1];
+        nameAccumulator.push(stateName);
+        if (stateConfig.Type === "Map") {
+            nameAccumulator.push.apply(nameAccumulator, Object.entries(stateConfig.Iterator.States).reduce(stateNameReducer, []));
+        }
+        if (stateConfig.Type === "Parallel") {
+            stateConfig.Branches.forEach(function (branch) {
+                nameAccumulator.push.apply(nameAccumulator, Object.entries(branch.States).reduce(stateNameReducer, []));
+            });
+        }
+        return nameAccumulator;
+    }
+    return Object.entries(StatesObj).reduce(stateNameReducer, []);
+}
+/**
+ * Validate that all states names in the State machine are unique
+ */
+function validateHasUniqueStateNames(definition) {
+    var stateNames = getStateNames(definition.States);
+    var stateNameSet = new Set(stateNames);
+    if (stateNameSet.size === stateNames.length) {
+        return {
+            isValid: true,
+            errors: [],
+        };
+    }
+    else {
+        return {
+            isValid: false,
+            errors: [
+                {
+                    errorCode: ValidationErrorTypes.RULE_VALIDATION_ERROR,
+                    message: "Detected duplicated states in the playbook",
+                },
+            ],
+        };
+    }
+}
+exports.validateHasUniqueStateNames = validateHasUniqueStateNames;

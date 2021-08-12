@@ -1,5 +1,9 @@
+export declare enum ValidationErrorTypes {
+    SCHEMA_VALIDATION_ERROR = "SCHEMA_VALIDATION_ERROR",
+    RULE_VALIDATION_ERROR = "RULE_VALIDATION_ERROR"
+}
 export interface ValidationErrorObject {
-    errorCode: string;
+    errorCode: ValidationErrorTypes;
     message: string;
 }
 export interface ValidationResult {
@@ -22,3 +26,7 @@ export declare const validatePlaybookName: (data: any) => ValidationResult;
  * Validates that a State name abides by the schema
  */
 export declare const validateStateName: (data: any) => ValidationResult;
+/**
+ * Validate that all states names in the State machine are unique
+ */
+export declare function validateHasUniqueStateNames(definition: any): ValidationResult;

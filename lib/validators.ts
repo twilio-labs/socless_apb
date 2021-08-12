@@ -33,8 +33,13 @@ const ajv = new Ajv({
   allErrors: true,
 });
 
+export enum ValidationErrorTypes {
+  SCHEMA_VALIDATION_ERROR = "SCHEMA_VALIDATION_ERROR",
+  RULE_VALIDATION_ERROR = "RULE_VALIDATION_ERROR",
+}
+
 export interface ValidationErrorObject {
-  errorCode: string;
+  errorCode: ValidationErrorTypes;
   message: string;
 }
 
@@ -49,7 +54,7 @@ export interface ValidationResult {
  */
 function restructureAjvErrors(errors: ErrorObject[]): ValidationErrorObject[] {
   return errors.map((errObj: ErrorObject) => ({
-    errorCode: "SCHEMA_VALIDATION_ERROR",
+    errorCode: ValidationErrorTypes.SCHEMA_VALIDATION_ERROR,
     message: `${errObj.keyword} ${errObj.instancePath} ${
       errObj.message
     }. ${Object.entries(errObj.params)
@@ -146,3 +151,55 @@ export const validatePlaybookName = createSchemaValidator(
 export const validateStateName = createSchemaValidator(
   playbookSchema.properties.States.propertyNames
 );
+
+function getStateNames(StatesObj: object) {
+  function stateNameReducer(
+    nameAccumulator: string[],
+    [stateName, stateConfig]: [string, any]
+  ) {
+    nameAccumulator.push(stateName);
+    if (stateConfig.Type === "Map") {
+      nameAccumulator.push(
+        ...Object.entries(stateConfig.Iterator.States).reduce(
+          stateNameReducer,
+          []
+        )
+      );
+    }
+    if (stateConfig.Type === "Parallel") {
+      stateConfig.Branches.forEach((branch: any) => {
+        nameAccumulator.push(
+          ...Object.entries(branch.States).reduce(stateNameReducer, [])
+        );
+      });
+    }
+    return nameAccumulator;
+  }
+
+  return Object.entries(StatesObj).reduce(stateNameReducer, []);
+}
+
+/**
+ * Validate that all states names in the State machine are unique
+ */
+export function validateHasUniqueStateNames(definition): ValidationResult {
+  const stateNames: string[] = getStateNames(definition.States);
+  const stateNameSet = new Set(stateNames);
+
+  if (stateNameSet.size === stateNames.length) {
+    return {
+      isValid: true,
+      errors: [],
+    };
+  } else {
+    return {
+      isValid: false,
+      errors: [
+        {
+          errorCode: ValidationErrorTypes.RULE_VALIDATION_ERROR,
+          message: "Detected duplicated states in the playbook",
+        },
+      ],
+    };
+  }
+}
