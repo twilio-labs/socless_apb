@@ -1,4 +1,6 @@
 export declare const PARSE_SELF_NAME = "apb_render_nonstring_value";
+export declare const PARSE_SELF_REGEX_STRING: string;
+export declare const PARSE_SELF_PATTERN: RegExp;
 export declare const DEFAULT_RETRY: Readonly<{
     ErrorEquals: string[];
     IntervalSeconds: number;

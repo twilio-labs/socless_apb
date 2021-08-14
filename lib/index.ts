@@ -5,7 +5,6 @@ import {
   SoclessTaskStepParameters,
 } from "./socless_psuedo_states";
 import {
-  PARSE_SELF_NAME,
   DEFAULT_RETRY,
   DECORATOR_FLAGS,
   PLAYBOOK_FORMATTER_STEP_NAME,
@@ -13,15 +12,11 @@ import {
   SOCLESS_CORE_LAMBDA_NAME_FOR_RUNNING_PLAYBOOK_SETUP,
   PLAYBOOK_SETUP_STEP_NAME,
   STATES_EXECUTION_ROLE_ARN,
+  PARSE_SELF_PATTERN,
 } from "./constants";
 import { PlaybookValidationError } from "./errors";
 import { StateMachineYaml } from "./sls_apb";
 import { validatePlaybook } from "./validators";
-
-const parse_self_pattern = new RegExp(
-  `(\\"${PARSE_SELF_NAME}\\()(.*)(\\)\\")`,
-  "g"
-);
 
 export class apb {
   apb_config: any;
@@ -88,7 +83,7 @@ export class apb {
             StateMachineName: this.PlaybookName,
             DefinitionString: {
               "Fn::Sub": JSON.stringify(this.StateMachine, null, 4).replace(
-                parse_self_pattern,
+                PARSE_SELF_PATTERN,
                 "$2"
               ),
             },

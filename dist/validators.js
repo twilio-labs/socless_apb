@@ -1,79 +1,56 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.validateHasUniqueStateNames = exports.validateStateName = exports.validatePlaybookName = exports.validatePlaybook = exports.ValidationErrorTypes = void 0;
-var ajv_1 = __importDefault(require("ajv"));
-var choice_json_1 = __importDefault(require("./schemas/choice.json"));
-var fail_json_1 = __importDefault(require("./schemas/fail.json"));
-var map_json_1 = __importDefault(require("./schemas/map.json"));
-var parallel_json_1 = __importDefault(require("./schemas/parallel.json"));
-var pass_json_1 = __importDefault(require("./schemas/pass.json"));
-var state_machine_json_1 = __importDefault(require("./schemas/state-machine.json"));
-var state_json_1 = __importDefault(require("./schemas/state.json"));
-var succeed_json_1 = __importDefault(require("./schemas/succeed.json"));
-var task_json_1 = __importDefault(require("./schemas/task.json"));
-var wait_json_1 = __importDefault(require("./schemas/wait.json"));
-var decorators_schema_json_1 = __importDefault(require("./schemas/decorators-schema.json"));
-var playbook_json_1 = __importDefault(require("./schemas/playbook.json"));
-var decorator_task_json_1 = __importDefault(require("./schemas/decorator-task.json"));
-// build an instance of ajv using schemas that for a valid  playbook.json
-var ajv = new ajv_1.default({
-    schemas: [
-        playbook_json_1.default,
-        decorator_task_json_1.default,
-        state_machine_json_1.default,
-        decorators_schema_json_1.default,
-        choice_json_1.default,
-        fail_json_1.default,
-        map_json_1.default,
-        parallel_json_1.default,
-        pass_json_1.default,
-        state_json_1.default,
-        succeed_json_1.default,
-        task_json_1.default,
-        wait_json_1.default,
-    ],
-    allErrors: true,
-});
+exports.validatePlaybookHasUniqueStateNames = exports.validatePlaybookObjectSchema = exports.validatePlaybook = exports.validateState = exports.ValidationErrorTypes = void 0;
+var schemas_1 = require("./schemas");
 var ValidationErrorTypes;
 (function (ValidationErrorTypes) {
     ValidationErrorTypes["SCHEMA_VALIDATION_ERROR"] = "SCHEMA_VALIDATION_ERROR";
     ValidationErrorTypes["RULE_VALIDATION_ERROR"] = "RULE_VALIDATION_ERROR";
+    ValidationErrorTypes["TYPE_ERROR"] = "TYPE_ERROR";
 })(ValidationErrorTypes = exports.ValidationErrorTypes || (exports.ValidationErrorTypes = {}));
-/**
- * Transforms ajv error objects into our ValidationErrorObject
- * @param errors list of ajv ErrorObjects
- */
-function restructureAjvErrors(errors) {
-    return errors.map(function (errObj) { return ({
-        errorCode: ValidationErrorTypes.SCHEMA_VALIDATION_ERROR,
-        message: errObj.keyword + " " + errObj.instancePath + " " + errObj.message + ". " + Object.entries(errObj.params)
-            .map(function (each) { return each.join(":"); })
-            .join(", "),
-    }); });
-}
-function createSchemaValidator(schema) {
-    var ajvValidator = ajv.compile(schema);
-    if (typeof ajvValidator === "undefined") {
-        throw new Error("Unable to retrieve a validator from AJV for the provided schema " + schema);
-    }
-    var validator = function (data) {
-        var isValid = ajvValidator(data);
-        if (typeof isValid !== "boolean") {
-            throw new Error("Ajv validator returned non-boolean response. This is an unexpected internal error that needs debugging");
-        }
-        var errors = ajvValidator.errors
-            ? restructureAjvErrors(ajvValidator.errors)
-            : [];
+function validateState(stateConfig) {
+    if (typeof stateConfig !== "object") {
         return {
-            isValid: isValid,
-            errors: errors,
+            isValid: false,
+            errors: [
+                {
+                    errorCode: ValidationErrorTypes.TYPE_ERROR,
+                    message: "Provided input is of incorrect type. Expected 'object', received " + typeof stateConfig,
+                },
+            ],
         };
+    }
+    var stateType = stateConfig.Type;
+    var schema = schemas_1.ValidateStateHelper[stateType];
+    var noMatchingSchemaError = {
+        isValid: false,
+        errors: [
+            {
+                errorCode: ValidationErrorTypes.SCHEMA_VALIDATION_ERROR,
+                message: "State.Type of " + stateType + " is not a supported. Please ensure the provided input has a Type key that is a supported Playbook Type",
+            },
+        ],
     };
-    return validator;
+    return schema
+        ? validateWithSchema(schema, stateConfig)
+        : noMatchingSchemaError;
 }
+exports.validateState = validateState;
+/**
+ * Validates that a SOCless Playbook definition has the correct JSON schema
+ * AND follows all ASL rules.
+ * NOTE: This function is not fully implemented but is ready for use in an alpha state
+ * @param definition SOCless playbook definition
+ */
+function validatePlaybook(definition) {
+    //TODO: Extend this to return the results from validateASLRules as well'
+    var schemaValidationResult = validatePlaybookObjectSchema(definition);
+    if (!schemaValidationResult.isValid) {
+        return schemaValidationResult;
+    }
+    return validatePlaybookHasUniqueStateNames(definition);
+}
+exports.validatePlaybook = validatePlaybook;
 /**
  * Validates that the JSON structures within a playbook JSON obey the appropriate schema
  * DOES NOT completely validate that the playbook is valid according to all the rules laid
@@ -82,48 +59,73 @@ function createSchemaValidator(schema) {
  * - Ensuring a playbook has a terminal state
  * - Ensuring all states within the playbook are reachable
  */
-function validatePlaybookJsonSchema(definition) {
+function validatePlaybookObjectSchema(definition) {
     if (definition === undefined) {
         throw new Error("Playbook definition is undefined");
     }
-    var validate = ajv.getSchema(playbook_json_1.default.$id);
-    if (typeof validate === "undefined") {
-        throw new Error("Failed to create validator for playbookJsonSchema.");
+    return validateWithSchema(schemas_1.PlaybookSchema, definition);
+}
+exports.validatePlaybookObjectSchema = validatePlaybookObjectSchema;
+function validatePlaybookHasUniqueStateNames(definition) {
+    var stateNames = getStateNames(definition.States);
+    var uniqueStatenames = new Set(stateNames);
+    if (uniqueStatenames.size === stateNames.length) {
+        return {
+            isValid: true,
+            errors: [],
+        };
     }
-    var isValid = validate(definition);
-    if (typeof isValid !== "boolean") {
-        throw new Error("Ajv validator returned non-boolean response. This needs internal investigation into why");
+    else {
+        var countStateNameFrequenciesReducer = function (frequencyMap, currentStateName) {
+            frequencyMap[currentStateName] =
+                (frequencyMap[currentStateName] || 0) + 1;
+            return frequencyMap;
+        };
+        var stateNameFrequencies = stateNames.reduce(countStateNameFrequenciesReducer, {});
+        var duplicatedStates = Object.entries(stateNameFrequencies).reduce(function (duplicatesAccumulator, _a) {
+            var stateName = _a[0], stateCount = _a[1];
+            if (stateCount > 1) {
+                duplicatesAccumulator.push(stateName);
+            }
+            return duplicatesAccumulator;
+        }, []);
+        return {
+            isValid: false,
+            errors: [
+                {
+                    errorCode: ValidationErrorTypes.RULE_VALIDATION_ERROR,
+                    message: "The following states in the playbook are duplicated: " + duplicatedStates.join(", "),
+                },
+            ],
+        };
     }
-    var validationErrs = validate.errors;
-    var errors = [];
-    if (validationErrs) {
-        errors = restructureAjvErrors(validationErrs);
-    }
+}
+exports.validatePlaybookHasUniqueStateNames = validatePlaybookHasUniqueStateNames;
+/**
+ * Uses a Joi Schema to Validate data
+ */
+function validateWithSchema(joiSchema, data) {
+    var _a;
+    var validationResult = joiSchema.validate(data);
+    var isValid = validationResult.error ? false : true;
+    var errorDetails = ((_a = validationResult.error) === null || _a === void 0 ? void 0 : _a.details) || [];
+    var errors = isValid ? [] : restructureJoiErrorItems(errorDetails);
     return {
         isValid: isValid,
         errors: errors,
     };
 }
-/**
- * Validates that a SOCless Playbook definition has the correct JSON schema
- * AND follows all ASL rules.
- * NOTE: This function is not fully implemented but is ready for use in an alpha state
- * @param definition SOCless playbook definition
- */
-function validatePlaybook(definition) {
-    //TODO: Extend this to return the results from validateASLRules as well
-    return validatePlaybookJsonSchema(definition);
+function restructureJoiErrorItems(errors) {
+    return errors.map(function (_a) {
+        var message = _a.message, context = _a.context;
+        var additionalContext = (context === null || context === void 0 ? void 0 : context.message) ? " " + context.message : "";
+        var fullError = message + "." + additionalContext;
+        return {
+            message: fullError,
+            errorCode: ValidationErrorTypes.SCHEMA_VALIDATION_ERROR,
+        };
+    });
 }
-exports.validatePlaybook = validatePlaybook;
-/**
- * Validate that a Playbook's name abides by the expected schema in
- * schemas/playbook.json:$.properties.Playbook
- */
-exports.validatePlaybookName = createSchemaValidator(playbook_json_1.default.properties.Playbook);
-/**
- * Validates that a State name abides by the schema
- */
-exports.validateStateName = createSchemaValidator(playbook_json_1.default.properties.States.propertyNames);
 function getStateNames(StatesObj) {
     function stateNameReducer(nameAccumulator, _a) {
         var stateName = _a[0], stateConfig = _a[1];
@@ -140,28 +142,3 @@ function getStateNames(StatesObj) {
     }
     return Object.entries(StatesObj).reduce(stateNameReducer, []);
 }
-/**
- * Validate that all states names in the State machine are unique
- */
-function validateHasUniqueStateNames(definition) {
-    var stateNames = getStateNames(definition.States);
-    var stateNameSet = new Set(stateNames);
-    if (stateNameSet.size === stateNames.length) {
-        return {
-            isValid: true,
-            errors: [],
-        };
-    }
-    else {
-        return {
-            isValid: false,
-            errors: [
-                {
-                    errorCode: ValidationErrorTypes.RULE_VALIDATION_ERROR,
-                    message: "Detected duplicated states in the playbook",
-                },
-            ],
-        };
-    }
-}
-exports.validateHasUniqueStateNames = validateHasUniqueStateNames;

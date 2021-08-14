@@ -31,7 +31,6 @@ exports.apb = void 0;
 var constants_1 = require("./constants");
 var errors_1 = require("./errors");
 var validators_1 = require("./validators");
-var parse_self_pattern = new RegExp("(\\\"" + constants_1.PARSE_SELF_NAME + "\\()(.*)(\\)\\\")", "g");
 var apb = /** @class */ (function () {
     function apb(definition, apb_config) {
         var _a, _b;
@@ -65,7 +64,7 @@ var apb = /** @class */ (function () {
                 _a[this.PlaybookName] = {
                     Type: "AWS::StepFunctions::StateMachine",
                     Properties: __assign({ RoleArn: constants_1.STATES_EXECUTION_ROLE_ARN, StateMachineName: this.PlaybookName, DefinitionString: {
-                            "Fn::Sub": JSON.stringify(this.StateMachine, null, 4).replace(parse_self_pattern, "$2"),
+                            "Fn::Sub": JSON.stringify(this.StateMachine, null, 4).replace(constants_1.PARSE_SELF_PATTERN, "$2"),
                         } }, this.buildLoggingConfiguration()),
                 },
                 _a),
