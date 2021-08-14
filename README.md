@@ -42,6 +42,44 @@ validationResult conforms to the ValidationResult interface shown below
 }
 ```
 
+#### Validating a State Definition
+
+Use `validateState` function to validate a Playbook State Config.
+
+```
+import {validateState} from "apb/dist/validators"
+
+validateState({Type: "Task", "Resource": "${{self:custom.Resource}}", Next: "StateHere"})
+// returns { isValid: true, errors: [] }
+
+
+validateState({Type: "Task", Next: "StateHere"})
+
+// returns
+// {
+//   isValid: false,
+//   errors: [
+//     {
+//       message: '"Resource" is required.',
+//       errorCode: 'SCHEMA_VALIDATION_ERROR'
+//     }
+//   ]
+// }
+
+
+validateState(2)
+// returns
+// {
+//   isValid: false,
+//   errors: [
+//     {
+//       errorCode: 'TYPE_ERROR',
+//       message: "Provided input is of incorrect type. Expected 'object', received number"
+//     }
+//   ]
+// }
+```
+
 ### Rendering ASL State machines from playbooks
 
 To render Amazon States Language state machines from playbooks...
