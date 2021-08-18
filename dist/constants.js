@@ -1,7 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.JSON_SCHEMA_VERSION = exports.JSON_SCHEMA_ID_BASE_URI = exports.AWS_EVENT_RULE_RESOURCE_TYPE = exports.STATES_EXECUTION_ROLE_ARN = exports.SOCLESS_CORE_LAMBDA_NAME_FOR_RUNNING_PLAYBOOK_SETUP = exports.PLAYBOOK_SETUP_STEP_NAME = exports.PLAYBOOK_DIRECT_INVOCATION_CHECK_STEP_NAME = exports.PLAYBOOK_FORMATTER_STEP_NAME = exports.DECORATOR_FLAGS = exports.DEFAULT_RETRY = exports.PARSE_SELF_NAME = void 0;
+exports.JSON_SCHEMA_VERSION = exports.JSON_SCHEMA_ID_BASE_URI = exports.AWS_EVENT_RULE_RESOURCE_TYPE = exports.STATES_EXECUTION_ROLE_ARN = exports.SOCLESS_CORE_LAMBDA_NAME_FOR_RUNNING_PLAYBOOK_SETUP = exports.PLAYBOOK_SETUP_STEP_NAME = exports.PLAYBOOK_DIRECT_INVOCATION_CHECK_STEP_NAME = exports.PLAYBOOK_FORMATTER_STEP_NAME = exports.DECORATOR_FLAGS = exports.DEFAULT_RETRY = exports.PARSE_SELF_PATTERN = exports.PARSE_SELF_REGEX_STRING = exports.PARSE_SELF_NAME = void 0;
 exports.PARSE_SELF_NAME = "apb_render_nonstring_value";
+exports.PARSE_SELF_REGEX_STRING = "(\\\"" + exports.PARSE_SELF_NAME + "\\()(.*)(\\)\\\")";
+exports.PARSE_SELF_PATTERN = new RegExp(exports.PARSE_SELF_REGEX_STRING, "g");
 exports.DEFAULT_RETRY = Object.freeze({
     ErrorEquals: [
         "Lambda.ServiceException",

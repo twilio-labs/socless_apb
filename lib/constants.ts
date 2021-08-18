@@ -1,4 +1,6 @@
 export const PARSE_SELF_NAME = "apb_render_nonstring_value";
+export const PARSE_SELF_REGEX_STRING = `(\\"${PARSE_SELF_NAME}\\()(.*)(\\)\\")`;
+export const PARSE_SELF_PATTERN = new RegExp(PARSE_SELF_REGEX_STRING, "g");
 export const DEFAULT_RETRY = Object.freeze({
   ErrorEquals: [
     "Lambda.ServiceException",
