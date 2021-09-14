@@ -130,6 +130,8 @@ export const NestedDataTestExpression = Joi.object({
   StringGreaterThanPath: PathExpression,
   StringLessThanEquals: Joi.string(),
   StringLessThanEqualsPath: PathExpression,
+  StringGreaterThanEquals: Joi.string(),
+  StringGreaterThanEqualsPath: PathExpression,
   StringMatches: Joi.string(),
   NumericEquals: Joi.number(),
   NumericEqualsPath: PathExpression,
