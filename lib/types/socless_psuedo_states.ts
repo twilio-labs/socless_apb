@@ -1,6 +1,12 @@
 import { BaseStateAction, PassState, StepFunction } from ".";
 
-// SOCless custom state
+// SOCless custom StepFunction (called a Playbook)
+export interface PlaybookDefinition extends StepFunction {
+  Playbook: string;
+  Decorators?: Record<string, unknown>;
+}
+
+// SOCless custom state (will be transformed by apb into an AWS state)
 export interface InteractionState extends BaseStateAction {
   Type: "Interaction";
   Resource: string;
@@ -10,7 +16,7 @@ export interface InteractionState extends BaseStateAction {
   HeartbeatSecondsPath?: string;
 }
 
-// deprecated
+// Deprecated?
 export interface HelperStateFinalized extends PassState {
   Type: "Pass";
   Result: {
@@ -19,11 +25,6 @@ export interface HelperStateFinalized extends PassState {
   };
   ResultPath: "$.State_Config";
   Next: string;
-}
-
-export interface PlaybookDefinition extends StepFunction {
-  Playbook: string;
-  Decorators?: Record<string, unknown>;
 }
 
 export interface SoclessTaskStepParameters {
