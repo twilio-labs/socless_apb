@@ -1,4 +1,14 @@
-import { State, StepFunction, CommonStateFields, PassState } from "./stepFunction";
+import { BaseStateAction, PassState, StepFunction } from ".";
+
+// SOCless custom state
+export interface InteractionState extends BaseStateAction {
+  Type: "Interaction";
+  Resource: string;
+  TimeoutSeconds?: number;
+  TimeoutSecondsPath?: string;
+  HeartbeatSeconds?: number;
+  HeartbeatSecondsPath?: string;
+}
 
 // deprecated
 export interface HelperStateFinalized extends PassState {
@@ -11,11 +21,8 @@ export interface HelperStateFinalized extends PassState {
   Next: string;
 }
 
-export interface PlaybookDefinition {
+export interface PlaybookDefinition extends StepFunction {
   Playbook: string;
-  Comment?: string;
-  StartAt: string;
-  States: Record<string, State>;
   Decorators?: Record<string, unknown>;
 }
 

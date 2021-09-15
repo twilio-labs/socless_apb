@@ -1,14 +1,9 @@
-export interface StepFunction {
-  StartAt: string;
-  States: Record<string, State | unknown>;
-  Playbook?: string;
-  Comment?: string;
-}
+import { State } from ".";
 
 // Customized from https://states-language.net/
 
 // shared attributes for all END or CHOICE states (Succeed, Fail, Choice)
-interface BaseStateTerminal {
+export interface BaseStateTerminal {
   Type: string;
   Comment?: string;
 }
@@ -67,7 +62,7 @@ export interface PassState extends CommonStateFields {
 }
 
 // shared attributes for all States that do actions (Task, Parallel, Map, Interaction)
-interface BaseStateAction extends CommonStateFields {
+export interface BaseStateAction extends CommonStateFields {
   Parameters?: Record<string, unknown>;
   ResultPath?: string;
   ResultSelector?: Record<string, unknown>;
@@ -94,31 +89,10 @@ export interface MapState extends BaseStateAction {
 }
 
 // https://docs.aws.amazon.com/step-functions/latest/dg/amazon-states-language-parallel-state.html
-interface ParallelState extends BaseStateAction {
+export interface ParallelState extends BaseStateAction {
   Type: "Parallel";
   Branches: StepFunction[];
 }
-
-// SOCless custom state
-export interface InteractionState extends BaseStateAction {
-  Type: "Interaction";
-  Resource: string;
-  TimeoutSeconds?: number;
-  TimeoutSecondsPath?: string;
-  HeartbeatSeconds?: number;
-  HeartbeatSecondsPath?: string;
-}
-
-export declare type State =
-  | TaskState
-  | FailState
-  | SucceedState
-  | MapState
-  | ChoiceState
-  | ParallelState
-  | PassState
-  | InteractionState
-  | WaitState;
 
 // https://docs.aws.amazon.com/step-functions/latest/dg/amazon-states-language-choice-state.html#amazon-states-language-choice-state-rules
 export interface ChoiceRule {
@@ -166,6 +140,34 @@ export interface ChoiceRule {
   IsNumeric?: boolean;
   IsString?: boolean;
   IsTimestamp?: boolean;
+}
+
+// https://docs.aws.amazon.com/step-functions/latest/dg/amazon-states-language-state-machine-structure.html
+export interface StepFunction {
+  StartAt: string;
+  States: Record<string, State>;
+  Comment?: string;
+  TimeoutSeconds?: number;
+  Version?: string;
+}
+
+// https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-stepfunctions-statemachine.html
+export interface CloudFormationStateMachine {
+  Type: "AWS::StepFunctions::StateMachine";
+  Properties: CloudFormationStateMachineProperties;
+}
+
+export interface CloudFormationStateMachineProperties {
+  RoleArn: string;
+  Definition?: StepFunction;
+  DefinitionS3Location?: unknown;
+  DefinitionString?: string;
+  DefinitionSubstitutions?: Record<string, string>;
+  LoggingConfiguration?: unknown;
+  StateMachineName?: string;
+  StateMachineType?: "Standard" | "Express";
+  Tags?: string[];
+  TracingConfiguration?: { Enabled: boolean };
 }
 
 export {};
