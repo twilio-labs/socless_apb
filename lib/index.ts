@@ -1,9 +1,5 @@
-import { StepFunction, State } from "./stepFunction";
-import {
-  HelperState,
-  PlaybookDefinition,
-  SoclessTaskStepParameters,
-} from "./socless_psuedo_states";
+import { StepFunction, State, TaskState } from "./stepFunction";
+import { PlaybookDefinition, SoclessTaskStepParameters } from "./socless_psuedo_states";
 import {
   DEFAULT_RETRY,
   DECORATOR_FLAGS,
@@ -41,8 +37,7 @@ export class apb {
       ...DECORATOR_FLAGS,
     };
 
-    const { Playbook, States, Decorators, StartAt, Comment, ...topLevel } =
-      definition;
+    const { Playbook, States, Decorators, StartAt, Comment, ...topLevel } = definition;
     this.Decorators = Decorators || {};
     this.PlaybookName = Playbook;
     this.States = States;
@@ -107,9 +102,7 @@ export class apb {
   isDefaultRetryDisabled(stateName: string) {
     if (this.Decorators.DisableDefaultRetry) {
       const disable = this.Decorators.DisableDefaultRetry;
-      return (
-        disable.all || (disable.tasks && disable.tasks.includes(stateName))
-      );
+      return disable.all || (disable.tasks && disable.tasks.includes(stateName));
     } else {
       return false;
     }
@@ -161,10 +154,9 @@ export class apb {
 
     const retries = retryConfig.map((retryState) => {
       // remove this error type from the default retry
-      currentStepDefaultRetry.ErrorEquals =
-        currentStepDefaultRetry.ErrorEquals.filter((e) => {
-          return !retryState.ErrorEquals.includes(e);
-        });
+      currentStepDefaultRetry.ErrorEquals = currentStepDefaultRetry.ErrorEquals.filter((e) => {
+        return !retryState.ErrorEquals.includes(e);
+      });
       // add this retry to the final config
       return Object.assign({}, retryState);
     });
@@ -207,10 +199,7 @@ export class apb {
     };
   }
 
-  generateParametersForSoclessTask(
-    state_name: string,
-    handle_state_kwargs: Record<string, any>
-  ) {
+  generateParametersForSoclessTask(state_name: string, handle_state_kwargs: Record<string, any>) {
     const parameters: SoclessTaskStepParameters = {
       "execution_id.$": "$.execution_id",
       "artifacts.$": "$.artifacts",
@@ -232,10 +221,7 @@ export class apb {
     const parameters = {
       FunctionName: function_name,
       Payload: {
-        sfn_context: this.generateParametersForSoclessTask(
-          state_name,
-          handle_state_kwargs
-        ),
+        sfn_context: this.generateParametersForSoclessTask(state_name, handle_state_kwargs),
         "task_token.$": "$$.Task.Token",
       },
     };
@@ -270,9 +256,7 @@ export class apb {
       stateName !== this.DecoratorFlags.TaskFailureHandlerName
     ) {
       let currentCatchConfig = newConfig.Catch || [];
-      let handlerCatchConfig = [
-        this.genTaskFailureHandlerCatchConfig(stateName),
-      ];
+      let handlerCatchConfig = [this.genTaskFailureHandlerCatchConfig(stateName)];
       newConfig.Catch = [...currentCatchConfig, ...handlerCatchConfig];
     }
 
@@ -317,9 +301,7 @@ export class apb {
       stateName !== this.DecoratorFlags.TaskFailureHandlerName
     ) {
       let currentCatchConfig = newConfig.Catch || [];
-      let handlerCatchConfig = [
-        this.genTaskFailureHandlerCatchConfig(stateName),
-      ];
+      let handlerCatchConfig = [this.genTaskFailureHandlerCatchConfig(stateName)];
       newConfig.Catch = [...currentCatchConfig, ...handlerCatchConfig];
     }
 
@@ -338,8 +320,8 @@ export class apb {
   transformParallelState(stateName, stateConfig, States, DecoratorFlags) {
     let Output = {};
     let { Branches, End, ...topLevel } = stateConfig;
-    let helperStateName = `merge_${stateName.toLowerCase()}`.slice(0, 128);
-    let helperState: HelperState = {
+    let mergeParallelOutputStateName = `merge_${stateName.toLowerCase()}`.slice(0, 128);
+    let mergeParallelOutputState: TaskState = {
       Type: "Task",
       Resource: "${{self:custom.core.MergeParallelOutput}}",
       Catch: [],
@@ -351,45 +333,40 @@ export class apb {
     ) {
       // add catch for top level
       let currentCatchConfig = topLevel.Catch || [];
-      let handlerCatchConfig = [
-        this.genTaskFailureHandlerCatchConfig(stateName),
-      ];
+      let handlerCatchConfig = [this.genTaskFailureHandlerCatchConfig(stateName)];
       topLevel.Catch = [...currentCatchConfig, ...handlerCatchConfig];
 
       // add catch and retries for merge output task
-      helperState.Catch = [
-        this.genTaskFailureHandlerCatchConfig(helperStateName),
+      mergeParallelOutputState.Catch = [
+        this.genTaskFailureHandlerCatchConfig(mergeParallelOutputStateName),
       ];
     }
 
     if (!this.isDefaultRetryDisabled(stateName)) {
-      Object.assign(helperState, { Retry: [DEFAULT_RETRY] });
+      Object.assign(mergeParallelOutputState, { Retry: [DEFAULT_RETRY] });
     }
 
     if (End === undefined) {
-      Object.assign(helperState, {
+      Object.assign(mergeParallelOutputState, {
         Next: stateConfig.Next,
       });
     } else {
-      Object.assign(helperState, { End: true });
+      Object.assign(mergeParallelOutputState, { End: true });
     }
 
-    Object.assign(Output, topLevel, { Next: helperStateName });
+    Object.assign(Output, topLevel, { Next: mergeParallelOutputStateName });
 
     const newBranches = Branches.map((branch) => {
       return {
         StartAt: branch.StartAt,
-        States: this.transformStates(
-          (States = branch.States),
-          (DecoratorFlags = {})
-        ),
+        States: this.transformStates((States = branch.States), (DecoratorFlags = {})),
       };
     });
 
     Object.assign(Output, { Branches: newBranches });
     return {
       [stateName]: Output,
-      [helperStateName]: helperState,
+      [mergeParallelOutputStateName]: mergeParallelOutputState,
     };
   }
 
@@ -398,52 +375,31 @@ export class apb {
     Object.entries(States).forEach(([stateName, stateConfig]) => {
       switch (stateConfig.Type) {
         case "Choice":
-          Object.assign(
-            output,
-            this.transformChoiceState(stateName, stateConfig, States)
-          );
+          Object.assign(output, this.transformChoiceState(stateName, stateConfig, States));
           break;
         case "Task":
           Object.assign(
             output,
-            this.transformTaskState(
-              stateName,
-              stateConfig,
-              States,
-              DecoratorFlags
-            )
+            this.transformTaskState(stateName, stateConfig, States, DecoratorFlags)
           );
           break;
         case "Interaction":
           Object.assign(
             output,
-            this.transformInteractionState(
-              stateName,
-              stateConfig,
-              States,
-              DecoratorFlags
-            )
+            this.transformInteractionState(stateName, stateConfig, States, DecoratorFlags)
           );
           break;
         case "Parallel":
           Object.assign(
             output,
-            this.transformParallelState(
-              stateName,
-              stateConfig,
-              States,
-              DecoratorFlags
-            )
+            this.transformParallelState(stateName, stateConfig, States, DecoratorFlags)
           );
           break;
         case "Pass":
         case "Wait":
         case "Succeed":
         case "Fail":
-          Object.assign(
-            output,
-            this.defaultTransformState(stateName, stateConfig, States)
-          );
+          Object.assign(output, this.defaultTransformState(stateName, stateConfig, States));
           break;
         default:
           console.log(`Unknown Type: ${stateConfig.Type}`);
@@ -459,8 +415,7 @@ export class apb {
         Destinations: [
           {
             CloudWatchLogsLogGroup: {
-              LogGroupArn:
-                "${{cf:socless-${{self:provider.stage}}.PlaybooksLogGroup}}",
+              LogGroupArn: "${{cf:socless-${{self:provider.stage}}.PlaybooksLogGroup}}",
             },
           },
         ],
