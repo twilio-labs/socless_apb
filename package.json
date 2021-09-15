@@ -18,14 +18,17 @@
   ],
   "author": "Ubani Balogun",
   "license": "Apache-2.0",
+  "files": [
+    "/dist"
+  ],
   "dependencies": {
     "joi": "^17.4.2"
   },
   "devDependencies": {
-    "mocha": "^9.0.2",
+    "mocha": "^9.1.1",
     "nyc": "^15.1.0",
-    "prettier": "^2.3.2",
-    "ts-node": "^10.2.0",
-    "typescript": "^4.3.5"
+    "prettier": "^2.4.0",
+    "ts-node": "^10.2.1",
+    "typescript": "^4.4.3"
   }
 }
