@@ -1,6 +1,5 @@
 const assert = require("assert");
-const { parse } = require("path");
-const { apb } = require("../dist/index.js");
+const { apb } = require("../dist");
 const { PARSE_SELF_NAME, DECORATOR_FLAGS } = require("../dist/constants");
 const { PlaybookValidationError } = require("../dist/errors.js");
 const {
@@ -113,10 +112,7 @@ describe("apb", () => {
           Resource: "${{self:custom.core.AwaitMessageResponseActivity}}",
           Retry: [
             {
-              ErrorEquals: [
-                "Lambda.AWSLambdaException",
-                "Lambda.SdkClientException",
-              ],
+              ErrorEquals: ["Lambda.AWSLambdaException", "Lambda.SdkClientException"],
               IntervalSeconds: 2,
               MaxAttempts: 6,
               BackoffRate: 2,
@@ -239,17 +235,12 @@ describe("apb", () => {
       const with_logging = new apb(pb_parallel_and_interaction, {
         logging: true,
       }).StateMachineYaml;
-      assert(
-        with_logging.Resources.CheckUserHappiness.Properties
-          .LoggingConfiguration
-      );
+      assert(with_logging.Resources.CheckUserHappiness.Properties.LoggingConfiguration);
     });
 
     it("should exclude logging based on config object {logging: false}", () => {
       const no_logging = apb_with_parallel_and_interactions.StateMachineYaml;
-      assert(
-        !no_logging.Resources.CheckUserHappiness.Properties.LoggingConfiguration
-      );
+      assert(!no_logging.Resources.CheckUserHappiness.Properties.LoggingConfiguration);
     });
   });
 
@@ -258,8 +249,7 @@ describe("apb", () => {
       const apb_with_single_tfh = new apb(pb_task_failure_handler);
 
       // create array of Next step names for all catches on Celebrate_With_User
-      const catches =
-        apb_with_single_tfh.StateMachine.States.Celebrate_With_User.Catch;
+      const catches = apb_with_single_tfh.StateMachine.States.Celebrate_With_User.Catch;
       const next_steps = catches.map((catch_obj) => catch_obj.Next);
 
       assert(next_steps.includes(DECORATOR_FLAGS.TaskFailureHandlerStartLabel));
@@ -278,9 +268,8 @@ describe("apb", () => {
         apb_with_render_nonstring_flag.StateMachineYaml.Resources
       )[0];
       const definition =
-        apb_with_render_nonstring_flag.StateMachineYaml.Resources[
-          state_machine_name
-        ].Properties.DefinitionString["Fn::Sub"];
+        apb_with_render_nonstring_flag.StateMachineYaml.Resources[state_machine_name].Properties
+          .DefinitionString["Fn::Sub"];
 
       assert(definition.search(PARSE_SELF_NAME) < 0);
     });
@@ -292,9 +281,8 @@ describe("apb", () => {
         apb_with_render_nonstring_flag.StateMachineYaml.Resources
       )[0];
       const definition =
-        apb_with_render_nonstring_flag.StateMachineYaml.Resources[
-          state_machine_name
-        ].Properties.DefinitionString["Fn::Sub"];
+        apb_with_render_nonstring_flag.StateMachineYaml.Resources[state_machine_name].Properties
+          .DefinitionString["Fn::Sub"];
 
       assert.throws(() => {
         JSON.parse(definition);
@@ -306,9 +294,8 @@ describe("apb", () => {
         apb_with_parallel_and_interactions.StateMachineYaml.Resources
       )[0];
       const definition =
-        apb_with_parallel_and_interactions.StateMachineYaml.Resources[
-          state_machine_name
-        ].Properties.DefinitionString["Fn::Sub"];
+        apb_with_parallel_and_interactions.StateMachineYaml.Resources[state_machine_name].Properties
+          .DefinitionString["Fn::Sub"];
 
       assert.doesNotThrow(() => {
         JSON.parse(definition);

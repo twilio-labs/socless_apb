@@ -67,9 +67,7 @@ export const WaitSchema = IOState.append({
   TimestampPath: PathExpression,
 }).xor("Seconds", "Timestamp", "SecondsPath", "TimestampPath");
 
-export const ErrorEquals = Joi.array()
-  .items(Joi.string().required())
-  .required();
+export const ErrorEquals = Joi.array().items(Joi.string().required()).required();
 
 // done
 export const Retrier = Joi.object({
@@ -222,10 +220,7 @@ export const ChoiceSchema = Joi.object({
   InputPath: PathExpression,
   OutputPath: PathExpression,
   Default: StateName,
-  Choices: Joi.array()
-    .items(ChoiceBooleanExpression, TopLevelDataTestExpression)
-    .min(1)
-    .required(),
+  Choices: Joi.array().items(ChoiceBooleanExpression, TopLevelDataTestExpression).min(1).required(),
 });
 
 export const ParallelSchema = IOState.append({
@@ -235,9 +230,7 @@ export const ParallelSchema = IOState.append({
   ResultSelector: Joi.object().unknown(true),
   Retry: Retry,
   Catch: Catch,
-  Branches: Joi.array()
-    .items(Joi.link("#StateMachineSchema").required())
-    .required(),
+  Branches: Joi.array().items(Joi.link("#StateMachineSchema").required()).required(),
 }).id("ParallelSchema");
 
 export const MapSchema = IOState.append({
