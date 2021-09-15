@@ -19,6 +19,7 @@ exports.DECORATOR_FLAGS = Object.freeze({
     TaskFailureHandlerStartLabel: "_Task_Failed",
     TaskFailureHandlerEndLabel: "_End_With_Failure",
 });
+// Here we explicitly assign `string` to prevent `const` type incompatibility with Record<string, State>
 exports.PLAYBOOK_FORMATTER_STEP_NAME = "PLAYBOOK_FORMATTER";
 exports.PLAYBOOK_DIRECT_INVOCATION_CHECK_STEP_NAME = "Was_Playbook_Direct_Executed";
 exports.PLAYBOOK_SETUP_STEP_NAME = "Setup_Socless_Global_State";

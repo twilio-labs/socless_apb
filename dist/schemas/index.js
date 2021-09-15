@@ -60,9 +60,7 @@ exports.WaitSchema = IOState.append({
     SecondsPath: exports.PathExpression,
     TimestampPath: exports.PathExpression,
 }).xor("Seconds", "Timestamp", "SecondsPath", "TimestampPath");
-exports.ErrorEquals = joi_1.default.array()
-    .items(joi_1.default.string().required())
-    .required();
+exports.ErrorEquals = joi_1.default.array().items(joi_1.default.string().required()).required();
 // done
 exports.Retrier = joi_1.default.object({
     ErrorEquals: exports.ErrorEquals,
@@ -115,6 +113,8 @@ exports.NestedDataTestExpression = joi_1.default.object({
     StringGreaterThanPath: exports.PathExpression,
     StringLessThanEquals: joi_1.default.string(),
     StringLessThanEqualsPath: exports.PathExpression,
+    StringGreaterThanEquals: joi_1.default.string(),
+    StringGreaterThanEqualsPath: exports.PathExpression,
     StringMatches: joi_1.default.string(),
     NumericEquals: joi_1.default.number(),
     NumericEqualsPath: exports.PathExpression,
@@ -138,12 +138,13 @@ exports.NestedDataTestExpression = joi_1.default.object({
     TimestampLessThanEqualsPath: exports.PathExpression,
     TimestampGreaterThanEquals: exports.ISOTimestamp,
     TimestampGreaterThanEqualsPath: exports.PathExpression,
+    IsBoolean: joi_1.default.boolean().valid(true),
     IsNull: joi_1.default.boolean().valid(true),
     IsPresent: joi_1.default.boolean().valid(true),
     IsNumeric: joi_1.default.boolean().valid(true),
     IsString: joi_1.default.boolean().valid(true),
     IsTimestamp: joi_1.default.boolean().valid(true),
-}).xor("StringEquals", "StringEqualsPath", "StringLessThan", "StringLessThanPath", "StringGreaterThan", "StringGreaterThanPath", "StringLessThanEquals", "StringLessThanEqualsPath", "StringMatches", "NumericEquals", "NumericEqualsPath", "NumericLessThan", "NumericLessThanPath", "NumericGreaterThan", "NumericGreaterThanPath", "NumericLessThanEquals", "NumericLessThanEqualsPath", "NumericGreaterThanEquals", "NumericGreaterThanEqualsPath", "BooleanEquals", "BooleanEqualsPath", "TimestampEquals", "TimestampEqualsPath", "TimestampLessThan", "TimestampLessThanPath", "TimestampGreaterThan", "TimestampGreaterThanPath", "TimestampLessThanEquals", "TimestampLessThanEqualsPath", "TimestampGreaterThanEquals", "TimestampGreaterThanEqualsPath", "IsNull", "IsPresent", "IsNumeric", "IsString", "IsTimestamp");
+}).xor("StringEquals", "StringEqualsPath", "StringLessThan", "StringLessThanPath", "StringGreaterThan", "StringGreaterThanPath", "StringLessThanEquals", "StringLessThanEqualsPath", "StringGreaterThanEquals", "StringGreaterThanEqualsPath", "StringMatches", "NumericEquals", "NumericEqualsPath", "NumericLessThan", "NumericLessThanPath", "NumericGreaterThan", "NumericGreaterThanPath", "NumericLessThanEquals", "NumericLessThanEqualsPath", "NumericGreaterThanEquals", "NumericGreaterThanEqualsPath", "BooleanEquals", "BooleanEqualsPath", "TimestampEquals", "TimestampEqualsPath", "TimestampLessThan", "TimestampLessThanPath", "TimestampGreaterThan", "TimestampGreaterThanPath", "TimestampLessThanEquals", "TimestampLessThanEqualsPath", "TimestampGreaterThanEquals", "TimestampGreaterThanEqualsPath", "IsBoolean", "IsNull", "IsPresent", "IsNumeric", "IsString", "IsTimestamp");
 // done
 exports.ChoiceBooleanExpression = joi_1.default.object({
     Next: exports.StateName.required(),
@@ -161,10 +162,7 @@ exports.ChoiceSchema = joi_1.default.object({
     InputPath: exports.PathExpression,
     OutputPath: exports.PathExpression,
     Default: exports.StateName,
-    Choices: joi_1.default.array()
-        .items(exports.ChoiceBooleanExpression, exports.TopLevelDataTestExpression)
-        .min(1)
-        .required(),
+    Choices: joi_1.default.array().items(exports.ChoiceBooleanExpression, exports.TopLevelDataTestExpression).min(1).required(),
 });
 exports.ParallelSchema = IOState.append({
     Type: joi_1.default.string().required().valid("Parallel"),
@@ -173,9 +171,7 @@ exports.ParallelSchema = IOState.append({
     ResultSelector: joi_1.default.object().unknown(true),
     Retry: exports.Retry,
     Catch: exports.Catch,
-    Branches: joi_1.default.array()
-        .items(joi_1.default.link("#StateMachineSchema").required())
-        .required(),
+    Branches: joi_1.default.array().items(joi_1.default.link("#StateMachineSchema").required()).required(),
 }).id("ParallelSchema");
 exports.MapSchema = IOState.append({
     Type: joi_1.default.string().required().valid("Map"),
