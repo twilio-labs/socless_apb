@@ -1,4 +1,4 @@
-import { BaseStateAction, PassState, StepFunction } from ".";
+import { BaseStateAction, StepFunction } from ".";
 export interface PlaybookDefinition extends StepFunction {
     Playbook: string;
     Decorators?: Record<string, unknown>;
@@ -10,15 +10,6 @@ export interface InteractionState extends BaseStateAction {
     TimeoutSecondsPath?: string;
     HeartbeatSeconds?: number;
     HeartbeatSecondsPath?: string;
-}
-export interface HelperStateFinalized extends PassState {
-    Type: "Pass";
-    Result: {
-        Name: string;
-        Parameters: Record<string, any>;
-    };
-    ResultPath: "$.State_Config";
-    Next: string;
 }
 export interface SoclessTaskStepParameters {
     "execution_id.$": "$.execution_id";
