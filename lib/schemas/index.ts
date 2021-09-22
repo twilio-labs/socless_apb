@@ -201,12 +201,20 @@ export const NestedDataTestExpression = Joi.object({
   "IsTimestamp"
 );
 
+/**
+ * Represents a Not rule that is Nested in a ChoiceBooleanExpression
+ */
+
+export const NestedNotExpression = Joi.object({
+  Not: NestedDataTestExpression,
+});
+
 // done
 export const ChoiceBooleanExpression = Joi.object({
   Next: StateName.required(),
   Not: NestedDataTestExpression,
-  And: Joi.array().items(NestedDataTestExpression.required()),
-  Or: Joi.array().items(NestedDataTestExpression.required()),
+  And: Joi.array().items(NestedDataTestExpression, NestedNotExpression).min(1),
+  Or: Joi.array().items(NestedDataTestExpression, NestedNotExpression).min(1),
 }).xor("And", "Not", "Or");
 
 // done

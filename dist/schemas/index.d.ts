@@ -26,6 +26,10 @@ export declare const DecoratorTaskSchema: Joi.ObjectSchema<any>;
  * a ChoiceBooleanExpression.
  */
 export declare const NestedDataTestExpression: Joi.ObjectSchema<any>;
+/**
+ * Represents a Not rule that is Nested in a ChoiceBooleanExpression
+ */
+export declare const NestedNotExpression: Joi.ObjectSchema<any>;
 export declare const ChoiceBooleanExpression: Joi.ObjectSchema<any>;
 export declare const TopLevelDataTestExpression: Joi.ObjectSchema<any>;
 export declare const ChoiceSchema: Joi.ObjectSchema<any>;

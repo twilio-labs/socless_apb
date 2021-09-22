@@ -1,4 +1,4 @@
-import { PlaybookDefinition, SoclessTaskStepParameters, StepFunction, State, TaskState, CompleteStateMachineCloudFormation, ApbConfig } from "./types";
+import { PlaybookDefinition, SoclessTaskStepParameters, StepFunction, State, CompleteStateMachineCloudFormation, ApbConfig } from "./types";
 export declare class apb {
     apb_config: ApbConfig;
     DecoratorFlags: any;
@@ -37,7 +37,7 @@ export declare class apb {
     transformTaskState(stateName: string, stateConfig: any, States: any, DecoratorFlags: any): {};
     transformInteractionState(stateName: any, stateConfig: any, States: any, DecoratorFlags: any): {};
     transformParallelState(stateName: any, stateConfig: any, States: any, DecoratorFlags: any): {
-        [x: string]: TaskState;
+        [x: string]: {};
         [x: number]: {};
     };
     transformStates(States?: Record<string, State>, DecoratorFlags?: any): {};
