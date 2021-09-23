@@ -21,14 +21,10 @@ var __rest = (this && this.__rest) || function (s, e) {
         }
     return t;
 };
-var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
-    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
-        if (ar || !(i in from)) {
-            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
-            ar[i] = from[i];
-        }
-    }
-    return to.concat(ar || Array.prototype.slice.call(from));
+var __spreadArray = (this && this.__spreadArray) || function (to, from) {
+    for (var i = 0, il = from.length, j = to.length; i < il; i++, j++)
+        to[j] = from[i];
+    return to;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.apb = void 0;
@@ -39,7 +35,7 @@ var apb = /** @class */ (function () {
     function apb(definition, apb_config) {
         var _a, _b;
         if (apb_config === void 0) { apb_config = {}; }
-        var _c = (0, validators_1.validatePlaybook)(definition), isValid = _c.isValid, errors = _c.errors;
+        var _c = validators_1.validatePlaybook(definition), isValid = _c.isValid, errors = _c.errors;
         if (!isValid) {
             throw new errors_1.PlaybookValidationError("Playbook Definition is invalid " + JSON.stringify(errors, null, 2));
         }
@@ -215,7 +211,7 @@ var apb = /** @class */ (function () {
             stateName !== this.DecoratorFlags.TaskFailureHandlerName) {
             var currentCatchConfig = newConfig.Catch || [];
             var handlerCatchConfig = [this.genTaskFailureHandlerCatchConfig(stateName)];
-            newConfig.Catch = __spreadArray(__spreadArray([], currentCatchConfig, true), handlerCatchConfig, true);
+            newConfig.Catch = __spreadArray(__spreadArray([], currentCatchConfig), handlerCatchConfig);
         }
         var handle_state_parameters = newConfig.Parameters;
         if (handle_state_parameters) {
@@ -250,7 +246,7 @@ var apb = /** @class */ (function () {
             stateName !== this.DecoratorFlags.TaskFailureHandlerName) {
             var currentCatchConfig = newConfig.Catch || [];
             var handlerCatchConfig = [this.genTaskFailureHandlerCatchConfig(stateName)];
-            newConfig.Catch = __spreadArray(__spreadArray([], currentCatchConfig, true), handlerCatchConfig, true);
+            newConfig.Catch = __spreadArray(__spreadArray([], currentCatchConfig), handlerCatchConfig);
         }
         newConfig.Parameters = this.generateParametersForSoclessInteraction(stateName, newConfig.Parameters, newConfig.Resource);
         newConfig.Resource = "arn:aws:states:::lambda:invoke.waitForTaskToken";
@@ -274,7 +270,7 @@ var apb = /** @class */ (function () {
             // add catch for top level
             var currentCatchConfig = topLevel.Catch || [];
             var handlerCatchConfig = [this.genTaskFailureHandlerCatchConfig(stateName)];
-            topLevel.Catch = __spreadArray(__spreadArray([], currentCatchConfig, true), handlerCatchConfig, true);
+            topLevel.Catch = __spreadArray(__spreadArray([], currentCatchConfig), handlerCatchConfig);
             // add catch and retries for merge output task
             mergeParallelOutputState.Catch = [
                 this.genTaskFailureHandlerCatchConfig(mergeParallelOutputStateName),

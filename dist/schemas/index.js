@@ -9,7 +9,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ValidateStateHelper = exports.PlaybookSchema = exports.DecoratorsSchema = exports.TaskFailureHandlerSchema = exports.DisableDefaultRetry = exports.StateMachineSchema = exports.MapSchema = exports.ParallelSchema = exports.ChoiceSchema = exports.TopLevelDataTestExpression = exports.ChoiceBooleanExpression = exports.NestedDataTestExpression = exports.DecoratorTaskSchema = exports.TaskSchema = exports.Catch = exports.Catcher = exports.Retry = exports.Retrier = exports.ErrorEquals = exports.WaitSchema = exports.FailSchema = exports.SucceedSchema = exports.PassSchema = exports.ISOTimestamp = exports.PathExpression = exports.StateName = exports.APBRenderNontStringValue = exports.StateNameRegex = void 0;
+exports.ValidateStateHelper = exports.PlaybookSchema = exports.DecoratorsSchema = exports.TaskFailureHandlerSchema = exports.DisableDefaultRetry = exports.StateMachineSchema = exports.MapSchema = exports.ParallelSchema = exports.ChoiceSchema = exports.TopLevelDataTestExpression = exports.ChoiceBooleanExpression = exports.NestedNotExpression = exports.NestedDataTestExpression = exports.DecoratorTaskSchema = exports.TaskSchema = exports.Catch = exports.Catcher = exports.Retry = exports.Retrier = exports.ErrorEquals = exports.WaitSchema = exports.FailSchema = exports.SucceedSchema = exports.PassSchema = exports.ISOTimestamp = exports.PathExpression = exports.StateName = exports.APBRenderNontStringValue = exports.StateNameRegex = void 0;
 var joi_1 = __importDefault(require("joi"));
 exports.StateNameRegex = /^[a-zA-Z0-9_]{1,}/;
 exports.APBRenderNontStringValue = joi_1.default.string().pattern(
@@ -145,12 +145,18 @@ exports.NestedDataTestExpression = joi_1.default.object({
     IsString: joi_1.default.boolean().valid(true),
     IsTimestamp: joi_1.default.boolean().valid(true),
 }).xor("StringEquals", "StringEqualsPath", "StringLessThan", "StringLessThanPath", "StringGreaterThan", "StringGreaterThanPath", "StringLessThanEquals", "StringLessThanEqualsPath", "StringGreaterThanEquals", "StringGreaterThanEqualsPath", "StringMatches", "NumericEquals", "NumericEqualsPath", "NumericLessThan", "NumericLessThanPath", "NumericGreaterThan", "NumericGreaterThanPath", "NumericLessThanEquals", "NumericLessThanEqualsPath", "NumericGreaterThanEquals", "NumericGreaterThanEqualsPath", "BooleanEquals", "BooleanEqualsPath", "TimestampEquals", "TimestampEqualsPath", "TimestampLessThan", "TimestampLessThanPath", "TimestampGreaterThan", "TimestampGreaterThanPath", "TimestampLessThanEquals", "TimestampLessThanEqualsPath", "TimestampGreaterThanEquals", "TimestampGreaterThanEqualsPath", "IsBoolean", "IsNull", "IsPresent", "IsNumeric", "IsString", "IsTimestamp");
+/**
+ * Represents a Not rule that is Nested in a ChoiceBooleanExpression
+ */
+exports.NestedNotExpression = joi_1.default.object({
+    Not: exports.NestedDataTestExpression,
+});
 // done
 exports.ChoiceBooleanExpression = joi_1.default.object({
     Next: exports.StateName.required(),
     Not: exports.NestedDataTestExpression,
-    And: joi_1.default.array().items(exports.NestedDataTestExpression.required()),
-    Or: joi_1.default.array().items(exports.NestedDataTestExpression.required()),
+    And: joi_1.default.array().items(exports.NestedDataTestExpression, exports.NestedNotExpression).min(1),
+    Or: joi_1.default.array().items(exports.NestedDataTestExpression, exports.NestedNotExpression).min(1),
 }).xor("And", "Not", "Or");
 // done
 exports.TopLevelDataTestExpression = exports.NestedDataTestExpression.append({

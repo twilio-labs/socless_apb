@@ -1,11 +1,38 @@
 {
   "Playbook": "HelloWorld",
-  "Comment": "A simple playbook used predominantly for testing the playbook.events.schedule feature of sls-apb in serverless.yaml",
+  "Comment": "A simple playbook used for testing",
   "StartAt": "HelloWorld",
   "States": {
     "HelloWorld": {
       "Type": "Pass",
-      "End": true
+      "Next": "Choice_State"
+    },
+    "How_Are_You": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.results.result",
+          "StringEquals": "true",
+          "Next": "Fine"
+        },
+        {
+          "And": [
+            {
+              "Not": {
+                "Variable": "$.stateinput.key",
+                "IsPresent": true
+              }
+            }
+          ],
+          "Next": "Not_Fine"
+        }
+      ]
+    },
+    "Fine": {
+      "Type": "Succeed"
+    },
+    "Not_Fine": {
+      "Type": "Fail"
     }
   }
 }
