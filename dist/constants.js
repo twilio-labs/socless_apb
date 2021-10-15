@@ -24,7 +24,9 @@ exports.PLAYBOOK_FORMATTER_STEP_NAME = "PLAYBOOK_FORMATTER";
 exports.PLAYBOOK_DIRECT_INVOCATION_CHECK_STEP_NAME = "Was_Playbook_Direct_Executed";
 exports.PLAYBOOK_SETUP_STEP_NAME = "Setup_Socless_Global_State";
 exports.SOCLESS_CORE_LAMBDA_NAME_FOR_RUNNING_PLAYBOOK_SETUP = "_socless_setup_global_state_for_direct_invoked_playbook";
-exports.STATES_EXECUTION_ROLE_ARN = "${{cf:socless-${{self:provider.stage}}.StatesExecutionRoleArn}}";
+exports.STATES_EXECUTION_ROLE_ARN = {
+    "Fn::Sub": "arn:aws:iam::${AWS::AccountId}:role/socless-${{self:provider.stage}}-states-execution",
+};
 exports.AWS_EVENT_RULE_RESOURCE_TYPE = "AWS::Events::Rule";
 exports.JSON_SCHEMA_ID_BASE_URI = "http://socless-apb-validator.socless";
 exports.JSON_SCHEMA_VERSION = "http://json-schema.org/draft-07/schema#";

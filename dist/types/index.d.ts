@@ -5,10 +5,6 @@ export interface ApbConfig {
     logging?: boolean;
     playbooksFolder?: string;
 }
-export interface SlsApbVariableResolutionHelper {
-    statesExecutionRole: string;
-    renderedPlaybooks: object;
-}
 export interface CompleteStateMachineCloudFormation {
     Resources: Record<string, CloudFormationStateMachine | unknown>;
     Outputs: object;
