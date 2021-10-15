@@ -11,6 +11,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ValidateStateHelper = exports.PlaybookSchema = exports.DecoratorsSchema = exports.TaskFailureHandlerSchema = exports.DisableDefaultRetry = exports.StateMachineSchema = exports.MapSchema = exports.ParallelSchema = exports.ChoiceSchema = exports.TopLevelDataTestExpression = exports.ChoiceBooleanExpression = exports.NestedNotExpression = exports.NestedDataTestExpression = exports.DecoratorTaskSchema = exports.TaskSchema = exports.Catch = exports.Catcher = exports.Retry = exports.Retrier = exports.ErrorEquals = exports.WaitSchema = exports.FailSchema = exports.SucceedSchema = exports.PassSchema = exports.ISOTimestamp = exports.PathExpression = exports.StateName = exports.APBRenderNontStringValue = exports.StateNameRegex = void 0;
 var joi_1 = __importDefault(require("joi"));
+var constants_1 = require("../constants");
 exports.StateNameRegex = /^[a-zA-Z0-9_]{1,}/;
 exports.APBRenderNontStringValue = joi_1.default.string().pattern(
 // This pattern is manually repeated here for now as the
@@ -18,7 +19,7 @@ exports.APBRenderNontStringValue = joi_1.default.string().pattern(
 // even though it works in str.replace
 // I suspect it might have something to do with the capture groups
 // Todo: Revist this to succesfully centralize and re-use a single regex for this
-new RegExp("^apb_render_nonstring_value\\(.+\\)$"));
+new RegExp("^" + constants_1.PARSE_SELF_NAME + "\\(.+\\)$"));
 exports.StateName = joi_1.default.string().pattern(exports.StateNameRegex);
 exports.PathExpression = joi_1.default.string().pattern(/^\$.*$/);
 exports.ISOTimestamp = joi_1.default.string().isoDate();

@@ -6,7 +6,7 @@
  */
 
 import Joi from "joi";
-import { PARSE_SELF_REGEX_STRING } from "../constants";
+import { PARSE_SELF_NAME } from "../constants";
 
 export const StateNameRegex = /^[a-zA-Z0-9_]{1,}/;
 
@@ -16,7 +16,7 @@ export const APBRenderNontStringValue = Joi.string().pattern(
   // even though it works in str.replace
   // I suspect it might have something to do with the capture groups
   // Todo: Revist this to succesfully centralize and re-use a single regex for this
-  new RegExp("^apb_render_nonstring_value\\(.+\\)$")
+  new RegExp(`^${PARSE_SELF_NAME}\\(.+\\)$`)
 );
 
 export const StateName = Joi.string().pattern(StateNameRegex);
