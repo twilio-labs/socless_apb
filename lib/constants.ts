@@ -24,8 +24,11 @@ export const PLAYBOOK_SETUP_STEP_NAME: string = "Setup_Socless_Global_State";
 
 export const SOCLESS_CORE_LAMBDA_NAME_FOR_RUNNING_PLAYBOOK_SETUP =
   "_socless_setup_global_state_for_direct_invoked_playbook";
-export const STATES_EXECUTION_ROLE_ARN =
-  "${{cf:socless-${{self:provider.stage}}.StatesExecutionRoleArn}}";
+
+export const STATES_EXECUTION_ROLE_ARN = {
+  "Fn::Sub":
+    "arn:aws:iam::${AWS::AccountId}:role/socless-${{self:provider.stage}}-states-execution",
+};
 
 export const AWS_EVENT_RULE_RESOURCE_TYPE = "AWS::Events::Rule";
 
