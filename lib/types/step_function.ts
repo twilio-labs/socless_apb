@@ -31,8 +31,10 @@ export interface ChoiceState extends BaseStateTerminal {
   OutputPath?: string;
 }
 
-/** Shared attributes for all regular States (Wait, Pass) & (Task, Parallel, Map, Interaction)
-/* https://docs.aws.amazon.com/step-functions/latest/dg/amazon-states-language-common-fields.html */
+/**
+ * Shared attributes for all regular States (Wait, Pass) & (Task, Parallel, Map, Interaction)
+ * https://docs.aws.amazon.com/step-functions/latest/dg/amazon-states-language-common-fields.html
+ */
 export interface CommonStateFields {
   Type: string;
   Comment?: string;
@@ -100,7 +102,7 @@ export interface Catch {
   ResultPath?: String;
 }
 
-/**https://docs.aws.amazon.com/step-functions/latest/dg/concepts-error-handling.html#error-handling-retrying-after-an-error */
+/** https://docs.aws.amazon.com/step-functions/latest/dg/concepts-error-handling.html#error-handling-retrying-after-an-error */
 export interface Retry {
   ErrorEquals: string[]; // must have at least 1 string.
   IntervalSeconds: number;
