@@ -111,12 +111,15 @@ export interface Retry {
 }
 
 /** https://docs.aws.amazon.com/step-functions/latest/dg/amazon-states-language-choice-state.html#amazon-states-language-choice-state-rules  */
-export interface ChoiceRule {
-  Variable: string;
-  Next?: string;
-  And?: ChoiceRule[];
-  Not?: ChoiceRule[];
-  Or?: ChoiceRule[];
+export interface ChoiceRule extends ChoiceRuleNested {
+  Next: string;
+}
+
+export interface ChoiceRuleNested {
+  Variable?: string;
+  And?: ChoiceRuleNested[];
+  Not?: ChoiceRuleNested[];
+  Or?: ChoiceRuleNested[];
   StringEquals?: string;
   StringEqualsPath?: string;
   StringLessThan?: string;
