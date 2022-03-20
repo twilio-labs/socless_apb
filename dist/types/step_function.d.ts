@@ -99,8 +99,8 @@ export interface ChoiceRule extends ChoiceRuleNested {
 export interface ChoiceRuleNested {
     Variable?: string;
     And?: ChoiceRuleNested[];
-    Not?: ChoiceRuleNested[];
     Or?: ChoiceRuleNested[];
+    Not?: ChoiceRuleNested;
     StringEquals?: string;
     StringEqualsPath?: string;
     StringLessThan?: string;
