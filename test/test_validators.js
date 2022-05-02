@@ -13,6 +13,7 @@ const {
   socless_slack_integration_test_playbook,
   pb_with_missing_top_level_keys,
   hello_world,
+  broken_playbook,
 } = require("./mocks");
 
 describe("validatePlaybook", () => {
@@ -23,6 +24,7 @@ describe("validatePlaybook", () => {
       socless_slack_integration_test_playbook,
       pb_parse_nonstring,
       pb_task_failure_handler,
+      broken_playbook,
     ];
 
     validPlaybooks
@@ -41,9 +43,7 @@ describe("validatePlaybook", () => {
   });
 
   it("Validation Fails and returns errors given invalid playbooks", () => {
-    const { isValid, errors } = validatePlaybook(
-      pb_with_missing_top_level_keys
-    );
+    const { isValid, errors } = validatePlaybook(pb_with_missing_top_level_keys);
     assert(!isValid);
     assert(errors.length > 0);
   });
@@ -96,14 +96,12 @@ describe("validatePlaybookHasUniqueNames", () => {
             States: {
               Validate: {
                 Type: "Task",
-                Resource:
-                  "arn:aws:lambda:us-east-1:123456789012:function:ship-val",
+                Resource: "arn:aws:lambda:us-east-1:123456789012:function:ship-val",
                 End: true,
               },
               ValidateAgain: {
                 Type: "Task",
-                Resource:
-                  "arn:aws:lambda:us-east-1:123456789012:function:ship-val",
+                Resource: "arn:aws:lambda:us-east-1:123456789012:function:ship-val",
                 End: true,
               },
               StateC: {
@@ -132,13 +130,9 @@ describe("validatePlaybookHasUniqueNames", () => {
       },
     };
 
-    const result = validatePlaybookHasUniqueStateNames(
-      playbookWithDuplicateStates
-    );
+    const result = validatePlaybookHasUniqueStateNames(playbookWithDuplicateStates);
     assert(!result.isValid);
-    assert(
-      result.errors[0].errorCode == ValidationErrorTypes.RULE_VALIDATION_ERROR
-    );
+    assert(result.errors[0].errorCode == ValidationErrorTypes.RULE_VALIDATION_ERROR);
   });
 });
 
@@ -157,9 +151,11 @@ describe("validateState", () => {
         const { isValid, errors } = validateState(stateConfig);
         assert(
           isValid,
-          `Playbook with name ${
-            playbook.Playbook
-          } failed because ${JSON.stringify(errors, null, 2)}`
+          `Playbook with name ${playbook.Playbook} failed because ${JSON.stringify(
+            errors,
+            null,
+            2
+          )}`
         );
         assert(errors.length === 0);
       });
@@ -261,11 +257,7 @@ describe("validateState", () => {
       const { isValid, errors } = validateState(state);
       assert(
         !isValid,
-        `State passed validation when it should have failed ${JSON.stringify(
-          state,
-          null,
-          2
-        )}`
+        `State passed validation when it should have failed ${JSON.stringify(state, null, 2)}`
       );
       assert(errors.length > 0);
     });
