@@ -1,0 +1,104 @@
+{
+    "Playbook": "SoclessIteratorsIntegrationTest",
+    "Comment": "Playbook to test all iterators integrations",
+    "StartAt": "List_Iterator",
+    "States": {
+        "List_Iterator": {
+            "Type": "Task",
+            "Resource": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${{self:functions.ListIterator.name}}",
+            "Parameters": {
+                "state_name": "$.artifacts.event.details.state_name",
+                "execution_id": "$.execution_id",
+                "init_list": "$.artifacts.event.details.init_list",
+                "init_count": "$.artifacts.event.details.init_count",
+                "list_name": "$.artifacts.event.details.list_name",
+                "count_name": "$.artifacts.event.details.count_name",
+                "target_name": "$.artifacts.event.details.target_name"
+            },
+            "Next": "Has_Every_Item_Been_Processed"
+        },
+        "Has_Every_Item_Been_Processed": {
+            "Type": "Choice",
+            "Choices": [
+                {
+                    "Variable": "$.results.to_continue",
+                    "BooleanEquals": false,
+                    "Next": "Every_Item_Has_Been_Processed"
+                },
+                {
+                    "Variable": "$.results.to_continue",
+                    "BooleanEquals": true,
+                    "Next": "Every_Item_Has_Not_Been_Processed"
+                }
+            ],
+            "Default": "Every_Item_Has_Not_Been_Processed"
+        },
+        "Every_Item_Has_Been_Processed": {
+            "Type": "Pass",
+            "Next": "Set_Loop_Counter"
+        },
+        "Every_Item_Has_Not_Been_Processed": {
+            "Type": "Pass",
+            "Next": "List_Iterator"
+        },
+        "Set_Loop_Counter": {
+            "Type": "Task",
+            "Resource": "${{self:custom.core.CacheResults}}",
+            "Parameters": {
+                "entries": {
+                    "loop_counter": "0",
+                    "list_element": [
+                        "element1",
+                        "element2",
+                        "element3",
+                        "element4"
+                    ]
+                }
+            },
+            "Next": "Get_Next_Element"
+        },
+        "Get_Next_Element": {
+            "Type": "Task",
+            "Resource": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${{self:functions.LoopListElements.name}}",
+            "Parameters": {
+                "list_elements": "{{context.results.Set_Loop_Counter.cached.list_element}}",
+                "index": "$.results._Last_Saved_Results.cached.loop_counter"
+            },
+            "Next": "Are_There_More_Remaining_Requests"
+        },
+        "Are_There_More_Remaining_Requests": {
+            "Type": "Choice",
+            "Choices": [
+                {
+                    "Variable": "$.results.Get_Next_Element.current_element",
+                    "IsNull": false,
+                    "Next": "Increase_Loop_Counter"
+                }
+            ],
+            "Default": "No_More_Pending_Requests"
+        },
+        "Increase_Loop_Counter": {
+            "Type": "Task",
+            "Resource": "${{self:custom.core.CacheResults}}",
+            "Parameters": {
+                "entries": {
+                    "loop_counter": "{{context.results.Get_Next_Element.next_element_index}}"
+                }
+            },
+            "Next": "Get_Next_Element"
+        },
+        "No_More_Pending_Requests": {
+            "Type": "Pass",
+            "Next": "Close_Investigation"
+        },
+        "Close_Investigation": {
+            "Type": "Task",
+            "Resource": "${{self:custom.core.SetInvestigationStatus}}",
+            "Parameters": {
+                "investigation_id": "$.artifacts.event.investigation_id",
+                "status": "closed"
+            },
+            "End": true
+        }
+    }
+}

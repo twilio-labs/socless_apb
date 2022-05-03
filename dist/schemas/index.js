@@ -139,12 +139,12 @@ exports.NestedDataTestExpression = joi_1.default.object({
     TimestampLessThanEqualsPath: exports.PathExpression,
     TimestampGreaterThanEquals: exports.ISOTimestamp,
     TimestampGreaterThanEqualsPath: exports.PathExpression,
-    IsBoolean: joi_1.default.boolean().valid(true),
-    IsNull: joi_1.default.boolean().valid(true),
-    IsPresent: joi_1.default.boolean().valid(true),
-    IsNumeric: joi_1.default.boolean().valid(true),
-    IsString: joi_1.default.boolean().valid(true),
-    IsTimestamp: joi_1.default.boolean().valid(true),
+    IsBoolean: joi_1.default.boolean(),
+    IsNull: joi_1.default.boolean(),
+    IsPresent: joi_1.default.boolean(),
+    IsNumeric: joi_1.default.boolean(),
+    IsString: joi_1.default.boolean(),
+    IsTimestamp: joi_1.default.boolean(),
 }).xor("StringEquals", "StringEqualsPath", "StringLessThan", "StringLessThanPath", "StringGreaterThan", "StringGreaterThanPath", "StringLessThanEquals", "StringLessThanEqualsPath", "StringGreaterThanEquals", "StringGreaterThanEqualsPath", "StringMatches", "NumericEquals", "NumericEqualsPath", "NumericLessThan", "NumericLessThanPath", "NumericGreaterThan", "NumericGreaterThanPath", "NumericLessThanEquals", "NumericLessThanEqualsPath", "NumericGreaterThanEquals", "NumericGreaterThanEqualsPath", "BooleanEquals", "BooleanEqualsPath", "TimestampEquals", "TimestampEqualsPath", "TimestampLessThan", "TimestampLessThanPath", "TimestampGreaterThan", "TimestampGreaterThanPath", "TimestampLessThanEquals", "TimestampLessThanEqualsPath", "TimestampGreaterThanEquals", "TimestampGreaterThanEqualsPath", "IsBoolean", "IsNull", "IsPresent", "IsNumeric", "IsString", "IsTimestamp");
 /**
  * Represents a Not rule that is Nested in a ChoiceBooleanExpression
