@@ -13,7 +13,7 @@ const {
   socless_slack_integration_test_playbook,
   pb_with_missing_top_level_keys,
   hello_world,
-  broken_playbook,
+  choice_validation_playbook,
 } = require("./mocks");
 
 describe("validatePlaybook", () => {
@@ -24,7 +24,7 @@ describe("validatePlaybook", () => {
       socless_slack_integration_test_playbook,
       pb_parse_nonstring,
       pb_task_failure_handler,
-      broken_playbook,
+      choice_validation_playbook,
     ];
 
     validPlaybooks
