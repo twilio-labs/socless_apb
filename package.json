@@ -22,7 +22,7 @@
     "/dist"
   ],
   "dependencies": {
-    "joi": "^17.4.2"
+    "joi": "^17.7.1"
   },
   "devDependencies": {
     "mocha": "^9.1.2",
